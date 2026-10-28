@@ -37,13 +37,18 @@ async function Contenu() {
     );
   }
 
-  const { data: dossiers } = await supabase
-    .from("dossiers")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .returns<Dossier[]>();
+  const [{ data: dossiers }, { data: commerciaux }] = await Promise.all([
+    supabase.from("dossiers").select("*").order("created_at", { ascending: false }).returns<Dossier[]>(),
+    supabase.from("membres").select("nom").eq("role", "commercial").order("nom"),
+  ]);
 
-  return <Dashboard me={me} initialDossiers={dossiers ?? []} />;
+  return (
+    <Dashboard
+      me={me}
+      initialDossiers={dossiers ?? []}
+      equipe={(commerciaux ?? []).map((c) => c.nom)}
+    />
+  );
 }
 
 function Chargement() {

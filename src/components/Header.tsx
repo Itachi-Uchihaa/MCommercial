@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Membre } from "@/lib/types";
 import { SignOutButton } from "./SignOutButton";
@@ -42,6 +43,11 @@ export function Header({ me, live }: { me: Membre; live: boolean }) {
             <div className="border-b border-line px-3.5 py-3 text-[13.5px] text-muted">
               {me.nom} · {me.email}
             </div>
+            {me.role === "admin" && (
+              <Link href="/admin" className="block border-b border-line px-3.5 py-3 text-[15px] font-semibold text-brand">
+                Administration
+              </Link>
+            )}
             <SignOutButton className="block w-full px-3.5 py-3 text-left text-[15px]">Se déconnecter</SignOutButton>
           </div>
         )}

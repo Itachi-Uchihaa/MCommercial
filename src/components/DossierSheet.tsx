@@ -89,6 +89,7 @@ function SheetForm({ dossier: d, commerciaux, defaultCommercial, onSave, onDelet
     const s = siret.replace(/\D/g, "");
     const m = mail.trim();
     if (!restaurant.trim()) return setError("Indique le nom du restaurant.");
+    if (!commercial) return setError("Aucun commercial dans l'équipe : ajoute-en un dans Administration.");
     if (s && s.length !== 14) return setError("Le SIRET doit faire 14 chiffres.");
     if (m && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) return setError("Adresse mail invalide.");
     setError(null);

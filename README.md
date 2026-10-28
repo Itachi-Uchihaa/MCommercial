@@ -13,6 +13,7 @@ Application mobile (PWA) de suivi des dossiers commerciaux mcaisse : RDV, devis,
 - Ajout, modification et suppression de dossiers
 - Connexion par email et mot de passe, réservée aux membres de l'équipe
 - Installable sur l'écran d'accueil (iPhone et Android)
+- Espace **Administration** (rôle admin) : créer, supprimer des comptes, changer les rôles, générer un nouveau mot de passe
 
 ## Lancer en local
 
@@ -24,12 +25,17 @@ npm run dev
 
 Puis ouvrir http://localhost:3000.
 
+Pour l'espace Administration, compléter `SUPABASE_SECRET_KEY` dans `.env.local` :
+Supabase → **Project Settings → API Keys → Secret keys** → copier la clé `sb_secret_…`.
+Cette clé donne tous les droits sur la base : elle ne doit jamais être committée ni partagée.
+
 ## Déployer sur Vercel
 
 1. Sur vercel.com : **Add New → Project**, importer ce dépôt.
-2. Dans **Environment Variables**, ajouter les deux variables de `.env.example` :
+2. Dans **Environment Variables**, ajouter les trois variables de `.env.example` :
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SECRET_KEY` (la clé secrète, pour l'espace Administration)
 3. Cliquer sur **Deploy**.
 
 Ensuite, dans Supabase (projet ProjetMCommercial) → **Authentication → URL Configuration** :
@@ -38,20 +44,21 @@ Ensuite, dans Supabase (projet ProjetMCommercial) → **Authentication → URL C
 
 Sans cette étape, le lien « Mot de passe oublié » ne ramène pas vers l'app.
 
-## Ajouter un membre de l'équipe
+## Gérer les comptes
 
-Il faut deux étapes, car un compte sans fiche membre voit « Accès non autorisé » :
+Un admin ouvre le menu (rond en haut à droite) → **Administration**. Il peut y :
+- **ajouter un compte** : prénom, email, rôle et mot de passe provisoire (généré automatiquement), puis copier le message à envoyer à la personne ;
+- **changer le rôle** : commercial, directeur ou admin ;
+- **générer un nouveau mot de passe** ;
+- **supprimer un compte** : la personne ne peut plus se connecter, ses dossiers sont conservés.
 
-1. Supabase → **Authentication → Users → Add user → Create new user** : email, mot de passe provisoire, cocher **Auto Confirm User**.
-2. Supabase → **SQL Editor** :
+Seuls les membres de rôle **commercial** apparaissent dans les filtres et le formulaire des dossiers.
+
+Le tout premier admin s'ajoute une seule fois à la main (Supabase → **SQL Editor**), après avoir créé son compte dans **Authentication → Users** :
 
 ```sql
-insert into public.membres (email, nom, role)
-values ('lamia@exemple.fr', 'Lamia', 'commercial');
--- role : 'commercial', 'directeur' ou 'admin'
+insert into public.membres (email, nom, role) values ('ton@email.fr', 'Ton prénom', 'admin');
 ```
-
-Pour proposer un nouveau commercial dans les filtres et le formulaire, ajouter aussi son prénom dans `src/lib/config.ts`.
 
 ## Base de données
 
@@ -66,9 +73,10 @@ src/
     login/                connexion et « mot de passe oublié »
     reinitialiser/        choix d'un nouveau mot de passe
     auth/callback/        retour des liens email Supabase
+    admin/                espace Administration (page + actions serveur sécurisées)
     manifest.ts           manifest PWA
   components/             Dashboard, Kpis, Board, DossierCard, DossierSheet…
-  lib/                    clients Supabase, types, calculs
+  lib/                    clients Supabase (dont le client admin, serveur uniquement), types, calculs
   proxy.ts                protège les pages et rafraîchit la session
 public/
   sw.js                   service worker (installation et cache des fichiers statiques)

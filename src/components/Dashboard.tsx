@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import { COMMERCIAUX } from "@/lib/config";
 import { createClient } from "@/lib/supabase/client";
 import { isDone, today } from "@/lib/dossiers";
 import type { Dossier, DossierInput, Membre, StepKey } from "@/lib/types";
@@ -13,9 +12,10 @@ import { Header } from "./Header";
 import { Kpis } from "./Kpis";
 import { Toast, useToast } from "./Toast";
 
-type Props = { me: Membre; initialDossiers: Dossier[] };
+/** equipe : prénoms des membres de rôle « commercial » (gérés dans /admin). */
+type Props = { me: Membre; initialDossiers: Dossier[]; equipe: string[] };
 
-export function Dashboard({ me, initialDossiers }: Props) {
+export function Dashboard({ me, initialDossiers, equipe }: Props) {
   const supabase = createClient();
   const [dossiers, setDossiers] = useState<Dossier[]>(initialDossiers);
   const [filter, setFilter] = useState("Tous");
@@ -76,10 +76,11 @@ export function Dashboard({ me, initialDossiers }: Props) {
   }, [supabase, reload, upsertLocal]);
 
   const commerciaux = useMemo(() => {
-    const set = new Set(COMMERCIAUX);
+    // Commerciaux de l'équipe + anciens noms encore présents sur des dossiers
+    const set = new Set(equipe);
     dossiers.forEach((d) => d.commercial && set.add(d.commercial));
     return [...set];
-  }, [dossiers]);
+  }, [dossiers, equipe]);
 
   const scope = useMemo(
     () => (filter === "Tous" ? dossiers : dossiers.filter((d) => d.commercial === filter)),
@@ -129,7 +130,7 @@ export function Dashboard({ me, initialDossiers }: Props) {
     return null;
   }
 
-  const defaultCommercial = commerciaux.includes(me.nom) ? me.nom : filter !== "Tous" ? filter : commerciaux[0];
+  const defaultCommercial = commerciaux.includes(me.nom) ? me.nom : filter !== "Tous" ? filter : (commerciaux[0] ?? "");
 
   return (
     <>

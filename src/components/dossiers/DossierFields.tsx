@@ -10,17 +10,25 @@ type Props = {
   meNom: string;
   /** Champs remplis depuis l'annuaire : regroupés sous un bandeau. */
   hideSiret?: boolean;
+  /** Pour mettre le curseur sur le nom quand il manque. */
+  restaurantRef?: React.Ref<HTMLInputElement>;
+  restaurantInvalide?: boolean;
 };
 
 const label = "mb-1.5 block text-[13.5px] text-muted";
 
 /** Champs d'un dossier, partagés par « Nouveau dossier » et « Modifier les infos ». */
-export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSiret = false }: Props) {
+export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSiret = false, restaurantRef, restaurantInvalide }: Props) {
   return (
     <>
       <label className="mb-3 block">
-        <span className={label}>Nom du restaurant</span>
+        <span className={label}>
+          Nom du restaurant <span className="text-danger">*</span>
+        </span>
         <input
+          ref={restaurantRef}
+          aria-required="true"
+          aria-invalid={restaurantInvalide || undefined}
           className="input"
           name="restaurant"
           placeholder="Ex. Chez Marco"
@@ -54,7 +62,7 @@ export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSire
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 gap-x-2.5 sm:grid-cols-2">
         <label className="mb-3 block">
           <span className={label}>Téléphone</span>
           <input
@@ -69,7 +77,7 @@ export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSire
           />
         </label>
         <label className="mb-3 block">
-          <span className={label}>Mail</span>
+          <span className={label}>E-mail</span>
           <input
             className="input"
             name="mail"
@@ -86,7 +94,7 @@ export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSire
 
       {!hideSiret && (
         <label className="mb-3 block">
-          <span className={label}>N° SIRET</span>
+          <span className={label}>SIRET</span>
           <input
             className="input"
             name="siret"
@@ -109,8 +117,8 @@ export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSire
             type="button"
             aria-pressed={v.source === s}
             onClick={() => onChange({ source: v.source === s ? null : s })}
-            className={`min-h-10 rounded-full border px-3.5 text-[14px] ${
-              v.source === s ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border-line font-semibold"
+            className={`min-h-11 rounded-full px-3.5 text-[14px] ${
+              v.source === s ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border border-line font-semibold"
             }`}
           >
             {SOURCES[s]}

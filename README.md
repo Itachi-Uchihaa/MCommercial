@@ -15,9 +15,9 @@ Onglets en bas sur téléphone, menu latéral sur ordinateur. Tout se met à jou
 - **Agenda** : vue Semaine, ou vue Liste (tous les RDV à venir ou des 60 derniers jours, avec recherche) ; filtre par commercial, alerte si deux RDV se chevauchent, pas de RDV planifié dans le passé, compte rendu après chaque RDV (résultat, suite, jour de rappel).
 - **Relances automatiques** : devis sans réponse depuis 7 jours, rappel posé dans un compte rendu, RDV sans compte rendu ; côté directeur, dossiers signés qui n'avancent plus depuis 10 jours.
 - **Équipe** (directeur) : signés / objectif, taux de signature, délai moyen, parcours du RDV à l'installation, qui est sur le terrain aujourd'hui, à débloquer, chiffres par commercial, semaine de l'équipe, pourquoi on perd, d'où viennent les signatures, export CSV. Objectifs mensuels fixés par les administrateurs.
-- **Notifications push** (gratuites, sans App Store), activées par chacun dans **Paramètres**, qui choisit aussi ce qui le prévient (`src/lib/notifications.ts`) : RDV ajouté ou déplacé pour lui, récap du matin, et l'activité de l'équipe (nouveau dossier, nouveau RDV, compte rendu, chaque étape, dossier perdu), jamais pour ses propres actions. Par défaut : tout pour la direction, RDV et récap pour un commercial. Sur iPhone, l'app doit d'abord être ajoutée à l'écran d'accueil (iOS 16.4 ou plus).
+- **Notifications push** (gratuites, sans App Store), activées par chacun dans **Paramètres**, qui choisit aussi ce qui le prévient (`src/lib/notifications.ts`). Un commercial : RDV ajouté ou déplacé pour lui, récap du matin. La direction peut aussi suivre l'activité de l'équipe (nouveau dossier, nouveau RDV, compte rendu, chaque étape, dossier perdu), tout coché par défaut, jamais pour ses propres actions. Sur iPhone, l'app doit d'abord être ajoutée à l'écran d'accueil (iOS 16.4 ou plus).
 - Connexion par email et mot de passe, réservée aux membres de l'équipe ; installable sur l'écran d'accueil (iPhone et Android).
-- Espace **Administration** (réservé aux emails de `ADMIN_EMAILS`) : créer, supprimer des comptes, changer les rôles, générer un nouveau mot de passe. **Paramètres** : chacun change son prénom.
+- Espace **Administration** (admins et directeurs) : créer, supprimer des comptes, changer les rôles, générer un nouveau mot de passe. **Paramètres** : chacun change son prénom.
 
 ## Lancer en local
 
@@ -40,7 +40,7 @@ Cette clé donne tous les droits sur la base : elle ne doit jamais être committ
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SECRET_KEY` (la clé secrète, pour l'espace Administration, les objectifs et les notifications)
-   - `ADMIN_EMAILS` (emails autorisés à l'espace Administration, séparés par des virgules)
+   - `ADMIN_EMAILS` (facultatif : emails qui ont accès à l'Administration en plus des admins et directeurs)
    - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY` (notifications push)
    - `CRON_SECRET` (récap du matin)
 3. Cliquer sur **Deploy**.
@@ -55,9 +55,9 @@ Sans cette étape, le lien « Mot de passe oublié » ne ramène pas vers l'app.
 
 ## Gérer les comptes
 
-L'espace **Administration** n'est ouvert qu'aux emails listés dans `ADMIN_EMAILS` (`.env.local` et Vercel), pas à un rôle : personne ne peut s'y donner accès depuis l'app. Pour ajouter ou retirer une personne, modifier la variable puis redéployer sur Vercel (**Deployments → Redeploy**).
+L'espace **Administration** est ouvert aux rôles **admin** et **directeur**, plus les emails éventuellement listés dans `ADMIN_EMAILS`. Un directeur ne peut ni modifier ni supprimer un compte admin.
 
-Une personne autorisée ouvre le menu (rond en haut à droite) → **Administration**. Elle peut y :
+Une personne autorisée ouvre le menu (rond en haut à droite sur téléphone, menu de gauche sur ordinateur) → **Administration**. Elle peut y :
 - **ajouter un compte** : prénom, email, rôle et mot de passe provisoire (généré automatiquement), puis copier le message à envoyer à la personne ;
 - **changer le rôle** : commercial ou directeur ;
 - **générer un nouveau mot de passe** ;
@@ -65,13 +65,13 @@ Une personne autorisée ouvre le menu (rond en haut à droite) → **Administrat
 
 Seuls les membres de rôle **commercial** apparaissent dans les filtres et le formulaire des dossiers.
 
-La toute première personne s'ajoute une seule fois à la main (Supabase → **SQL Editor**), après avoir créé son compte dans **Authentication → Users** et mis son email dans `ADMIN_EMAILS` :
+La toute première personne s'ajoute une seule fois à la main (Supabase → **SQL Editor**), après avoir créé son compte dans **Authentication → Users** :
 
 ```sql
 insert into public.membres (email, nom, role) values ('ton@email.fr', 'Ton prénom', 'directeur');
 ```
 
-Le rôle `admin` existe encore en base pour les comptes déjà créés, mais il ne donne plus aucun droit.
+Le rôle `admin` ne s'attribue pas depuis l'app (seulement en base) : il protège les comptes qu'un directeur ne doit pas toucher.
 
 ## Base de données
 

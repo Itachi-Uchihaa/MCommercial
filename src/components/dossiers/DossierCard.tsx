@@ -59,7 +59,7 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
         </span>
         {prochain && (
           <span className="font-semibold text-brand">
-            RDV {prochain.jour === today ? "aujourd’hui" : fmtJourCourt(prochain.jour)} {fmtHeure(prochain.debut)}
+            RDV {prochain.jour === today ? "aujourd’hui" : fmtJourCourt(prochain.jour)} à {fmtHeure(prochain.debut)}
           </span>
         )}
       </span>

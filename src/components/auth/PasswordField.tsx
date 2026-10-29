@@ -44,7 +44,7 @@ export function PasswordField({ ref, id, label, value, onChange, autoComplete, i
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+          aria-label="Afficher le mot de passe"
           aria-pressed={visible}
           className="absolute top-0.5 right-0.5 grid size-11 place-items-center rounded-[10px] text-muted hover:bg-canvas hover:text-ink"
         >

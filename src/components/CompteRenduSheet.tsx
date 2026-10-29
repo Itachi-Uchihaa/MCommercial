@@ -15,7 +15,7 @@ const RESULTATS: { key: ResultatRdv; label: string; Icon: typeof IconCheck }[] =
 ];
 
 const SUITES: { key: SuiteRdv; label: string }[] = [
-  { key: "devis", label: "Envoyer le devis" },
+  { key: "devis", label: "Devis à envoyer" },
   { key: "nouveau_rdv", label: "Planifier un autre RDV" },
   { key: "rien", label: "Rien pour l’instant" },
 ];
@@ -79,13 +79,13 @@ function Form({ rdv, today, onSaved, onClose }: { rdv: RendezVous } & Omit<Props
   }
 
   const chip = (active: boolean) =>
-    `min-h-11 rounded-full border px-3.5 text-[14px] ${
-      active ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border-line font-semibold"
+    `min-h-11 rounded-full px-3.5 text-[14px] ${
+      active ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border border-line font-semibold"
     }`;
 
   return (
     <form onSubmit={submit} noValidate className="pb-4.5">
-      <h2 className="text-xl font-extrabold">Compte rendu</h2>
+      <h2 className="pr-12 text-xl font-extrabold">Compte rendu</h2>
       <p className="mt-0.5 text-[14px] text-muted">
         {RDV_TYPES[rdv.type]} · {rdv.restaurant} · {fmtJourCourt(rdv.jour)}, {fmtHeure(rdv.debut)} – {fmtHeure(rdv.fin)}
       </p>
@@ -100,8 +100,8 @@ function Form({ rdv, today, onSaved, onClose }: { rdv: RendezVous } & Omit<Props
             type="button"
             aria-pressed={resultat === key}
             onClick={() => choisir(key)}
-            className={`flex h-19 flex-col items-center justify-center gap-1.5 rounded-[14px] border text-[14px] ${
-              resultat === key ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border-line font-semibold"
+            className={`flex h-19 flex-col items-center justify-center gap-1.5 rounded-[14px] text-[14px] ${
+              resultat === key ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border border-line font-semibold"
             }`}
           >
             <Icon className="size-[22px]" />

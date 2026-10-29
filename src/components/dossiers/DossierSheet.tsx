@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { modifierDossier, supprimerDossier } from "@/app/actions/dossiers";
 import type { Dossier, DossierInfos } from "@/lib/types";
@@ -42,13 +42,22 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
     notes: d.notes,
   });
   const [error, setError] = useState<string | null>(null);
+  const [nomInvalide, setNomInvalide] = useState(false);
+  const [suppression, setSuppression] = useState(false);
   const [pending, start] = useTransition();
+  const nomRef = useRef<HTMLInputElement>(null);
   const [initiales] = useState(() => JSON.stringify(infos));
   useUnsavedGuard(JSON.stringify(infos) !== initiales);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!infos.restaurant.trim()) {
+      setError("Indique le nom du restaurant.");
+      setNomInvalide(true);
+      return nomRef.current?.focus();
+    }
     setError(null);
+    setSuppression(false);
     start(async () => {
       const res = await modifierDossier(d.id, infos);
       if (res.ok) onSaved("Dossier mis à jour");
@@ -58,6 +67,7 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
 
   function remove() {
     if (!confirm(`Supprimer le dossier « ${d.restaurant} » ? Son journal est supprimé avec lui, ses RDV restent dans l’agenda. Cette action est définitive.`)) return;
+    setSuppression(true);
     start(async () => {
       const res = await supprimerDossier(d.id);
       if (!res.ok) return setError(res.error);
@@ -67,8 +77,18 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
 
   return (
     <form onSubmit={submit} noValidate className="pb-4.5">
-      <h2 className="mb-3.5 text-xl font-bold">Modifier le dossier</h2>
-      <DossierFields value={infos} onChange={(p) => setInfos((i) => ({ ...i, ...p }))} commerciaux={commerciaux} meNom={meNom} />
+      <h2 className="mb-3.5 pr-12 text-xl font-bold">Modifier le dossier</h2>
+      <DossierFields
+        value={infos}
+        onChange={(p) => {
+          setInfos((i) => ({ ...i, ...p }));
+          if (p.restaurant !== undefined) setNomInvalide(false);
+        }}
+        commerciaux={commerciaux}
+        meNom={meNom}
+        restaurantRef={nomRef}
+        restaurantInvalide={nomInvalide}
+      />
       <label className="mb-3 block">
         <span className="mb-1.5 block text-[13.5px] text-muted">Remarque</span>
         <textarea
@@ -87,10 +107,10 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
       )}
 
       <button disabled={pending} className="w-full rounded-2xl bg-brand py-4 font-bold text-white disabled:opacity-60">
-        {pending ? "Enregistrement…" : "Enregistrer"}
+        {pending && !suppression ? "Enregistrement…" : "Enregistrer"}
       </button>
-      <button type="button" disabled={pending} onClick={remove} className="mt-2 w-full rounded-2xl py-4 font-bold text-danger">
-        Supprimer ce dossier
+      <button type="button" disabled={pending} onClick={remove} className="mt-2 w-full rounded-2xl py-4 font-bold text-danger disabled:opacity-60">
+        {pending && suppression ? "Suppression…" : "Supprimer ce dossier"}
       </button>
     </form>
   );

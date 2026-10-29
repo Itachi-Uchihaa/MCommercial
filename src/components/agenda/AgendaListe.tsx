@@ -71,7 +71,7 @@ export function AgendaListe({
               key={key}
               onClick={() => onPeriode(key)}
               aria-pressed={periode === key}
-              className={`min-h-10 rounded-[9px] text-[14px] ${
+              className={`min-h-11 rounded-[9px] text-[14px] ${
                 periode === key ? "bg-white font-bold shadow-[0_1px_3px_rgba(15,23,51,.12)]" : "font-semibold text-muted"
               }`}
             >
@@ -94,7 +94,7 @@ export function AgendaListe({
         </label>
       </div>
 
-      <p aria-live="polite" className="mx-0.5 mt-3 text-[13px] text-muted">
+      <p className="mx-0.5 mt-3 text-[13px] text-muted">
         {loading
           ? "Chargement…"
           : `${total} RDV ${periode === "avenir" ? "à venir" : "sur les 60 derniers jours"}${q.trim() ? " pour cette recherche" : ""}`}
@@ -112,8 +112,8 @@ export function AgendaListe({
                 const passe = rdvPasse(r, today, nowTime);
                 const color = colorOf(r.commercial, equipe);
                 return (
-                  <li key={r.id} className={`flex items-center gap-2 pr-2 ${i ? "border-t border-line" : ""} ${passe ? "bg-[#f7f8fa]" : ""}`}>
-                    <button onClick={() => onEdit(r)} className="flex min-h-15 min-w-0 flex-1 items-center gap-3 py-2 pl-4 text-left">
+                  <li key={r.id} className={`flex flex-wrap items-center gap-x-2 pr-2 ${i ? "border-t border-line" : ""} ${passe ? "bg-[#f7f8fa]" : ""}`}>
+                    <button onClick={() => onEdit(r)} className="flex min-h-15 min-w-0 flex-1 basis-60 items-center gap-3 py-2 pl-4 text-left">
                       <span className={`w-12 flex-none font-bold tabular-nums ${passe ? "text-ink-soft" : ""}`}>{fmtHeure(r.debut)}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold break-words">{nom(r)}</span>
@@ -141,9 +141,9 @@ export function AgendaListe({
                       ) : (
                         <button
                           onClick={() => onCompteRendu(r)}
-                          className="min-h-11 flex-none rounded-xl bg-warn-soft px-3 text-[13.5px] font-bold text-warn"
+                          className="my-1.5 ml-auto min-h-11 flex-none rounded-xl bg-warn-soft px-3 text-[13.5px] font-bold text-warn"
                         >
-                          Compte rendu
+                          Faire le compte rendu
                         </button>
                       ))}
                   </li>
@@ -159,7 +159,7 @@ export function AgendaListe({
           {q.trim()
             ? "Aucun RDV ne correspond à cette recherche."
             : periode === "avenir"
-              ? "Aucun RDV à venir. Ajoute le premier avec « Nouveau RDV »."
+              ? "Aucun RDV à venir. Touche « Planifier un RDV » pour en ajouter un."
               : "Aucun RDV sur les 60 derniers jours."}
         </p>
       )}

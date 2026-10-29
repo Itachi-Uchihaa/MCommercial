@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       if (!siens.length && !relances.length) continue;
       const premier = siens[0];
       notif = {
-        title: `Bonjour ${m.nom}`,
+        title: `Bonjour, ${m.nom}`,
         body: [
           premier
             ? `${siens.length} RDV aujourd’hui, le premier à ${fmtHeure(premier.debut)} (${RDV_TYPES[premier.type]} chez ${premier.restaurant})`
@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       };
     } else {
       const blocages = relancesDe({ dossiers, rdvs, today, nowTime, blocages: true });
+      if (!duJour.length && !blocages.length) continue; // rien à dire : pas de « 0 RDV · 0 dossier »
       notif = {
         title: "L’équipe aujourd’hui",
         body: `${duJour.length} RDV prévu${duJour.length > 1 ? "s" : ""} · ${blocages.length} dossier${blocages.length > 1 ? "s" : ""} à débloquer`,

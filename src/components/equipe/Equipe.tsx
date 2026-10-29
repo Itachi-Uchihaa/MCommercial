@@ -34,7 +34,11 @@ type Props = {
   dossiers: Dossier[];
 };
 
-const JOURS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
+/** « Lun. » */
+const jourCourt = (day: string) => {
+  const s = new Date(`${day}T00:00:00Z`).toLocaleDateString("fr-FR", { weekday: "short", timeZone: "UTC" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 export function Equipe(props: Props) {
   const { me, canAdmin, equipe, today, nowTime, periode, stats: s, aRelancer, blocages, semaine, objectifsDuMois, dossiers } = props;
@@ -66,7 +70,7 @@ export function Equipe(props: Props) {
               key={p.key}
               href={`/equipe?periode=${p.key}`}
               aria-current={p.key === periode ? "page" : undefined}
-              className={`flex min-h-10 items-center justify-center rounded-[9px] px-3.5 text-[14px] ${
+              className={`flex min-h-11 items-center justify-center rounded-[9px] px-3.5 text-[14px] ${
                 p.key === periode ? "bg-white font-bold shadow-[0_1px_3px_rgba(15,23,51,.12)]" : "font-semibold text-muted"
               }`}
             >
@@ -79,7 +83,7 @@ export function Equipe(props: Props) {
           className="hidden min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-4 font-semibold sm:flex"
         >
           <IconDownload className="size-[18px]" />
-          Exporter en CSV
+          Exporter les dossiers en CSV
         </button>
       </div>
 
@@ -98,12 +102,12 @@ export function Equipe(props: Props) {
           )}
         </Tuile>
         <Tuile titre="Taux de signature">
-          <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.taux === null ? "–" : `${s.taux} %`}</p>
+          <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.taux === null ? "–" : `${s.taux} %`}</p>
           <p className="mt-0.5 text-[12.5px] text-muted">des {s.devis} devis envoyés</p>
         </Tuile>
         <Tuile titre="Délai moyen">
           <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.delaiMoyen === null ? "–" : `${s.delaiMoyen} j`}</p>
-          <p className="mt-0.5 text-[12.5px] text-muted">du 1er RDV à la signature</p>
+          <p className="mt-0.5 text-[12.5px] text-muted">du premier RDV à la signature</p>
         </Tuile>
         <Tuile titre="Installés">
           <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.installes}</p>
@@ -144,7 +148,16 @@ export function Equipe(props: Props) {
                 </li>
               );
             })}
-            {commerciaux.length === 0 && <li className="px-4 py-4 text-muted">Aucun commercial dans l’équipe.</li>}
+            {commerciaux.length === 0 && (
+              <li className="px-4 py-4 text-muted">
+                Aucun commercial dans l’équipe.{" "}
+                {canAdmin && (
+                  <Link href="/admin" className="font-semibold text-brand">
+                    Ajouter des comptes
+                  </Link>
+                )}
+              </li>
+            )}
           </ul>
         </section>
 
@@ -154,7 +167,7 @@ export function Equipe(props: Props) {
           </h2>
           {blocages.length ? (
             <ul className="card overflow-hidden">
-              {blocages.slice(0, 8).map((r, i) => (
+              {blocages.map((r, i) => (
                 <li key={r.cle} className={i ? "border-t border-line" : ""}>
                   <Link
                     href={r.dossierId ? `/dossiers/${r.dossierId}` : "/agenda"}
@@ -188,7 +201,7 @@ export function Equipe(props: Props) {
               onClick={() => setObjectifs((o) => ({ open: true, key: o.key + 1 }))}
               className="mb-2 min-h-11 px-1 text-[14px] font-bold text-brand"
             >
-              Objectifs {deMois(today)}
+              Fixer les objectifs {deMois(today)}
             </button>
           )}
         </div>
@@ -210,7 +223,7 @@ export function Equipe(props: Props) {
               )}
               <p className="mt-2 text-[13px] text-muted">
                 {c.rdvSemaine} RDV cette semaine · {c.devisEnAttente} devis en attente
-                {c.taux !== null && ` · ${c.taux} % signés`}
+                {c.taux !== null && ` · ${c.taux} % signés`}
                 {aRelancer[c.nom] > 0 && (
                   <>
                     {" · "}
@@ -241,7 +254,7 @@ export function Equipe(props: Props) {
                 </span>
                 <span className="tabular-nums">
                   <b>{e.n}</b>
-                  {i > 0 && avant > 0 && <span className="text-muted"> · {Math.round((e.n / avant) * 100)} %</span>}
+                  {i > 0 && avant > 0 && <span className="text-muted"> · {Math.round((e.n / avant) * 100)}&nbsp;%</span>}
                 </span>
               </div>
             );
@@ -268,7 +281,7 @@ export function Equipe(props: Props) {
                 </th>
                 {jours.map((j) => (
                   <th key={j} scope="col" className={`px-1.5 text-left ${j === today ? "font-extrabold text-brand" : "font-bold"}`}>
-                    {JOURS[(new Date(`${j}T00:00:00Z`).getUTCDay() + 6) % 7]} {Number(j.slice(8))}
+                    {jourCourt(j)} {Number(j.slice(8))}
                   </th>
                 ))}
               </tr>
@@ -276,7 +289,7 @@ export function Equipe(props: Props) {
             <tbody>
               {commerciaux.map((c) => (
                 <tr key={c}>
-                  <th scope="row" className="pt-2 text-left align-top font-bold">
+                  <th scope="row" className="sticky left-0 z-10 bg-white pt-2 text-left align-top font-bold">
                     {c}
                   </th>
                   {jours.map((j) => {
@@ -452,7 +465,7 @@ function ObjectifsForm({
 
   return (
     <form onSubmit={submit} noValidate className="pb-4.5">
-      <h2 className="text-xl font-bold">Objectifs {deMois(mois)}</h2>
+      <h2 className="pr-12 text-xl font-bold">Objectifs {deMois(mois)}</h2>
       <p className="mt-1 mb-4 text-[14px] text-muted">Nombre de signatures visé par chaque commercial ce mois-ci.</p>
       {commerciaux.length === 0 && <p className="text-muted">Ajoute d’abord des commerciaux dans Administration.</p>}
       {commerciaux.map((c) => (
@@ -493,7 +506,7 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["SIRET", (d) => d.siret],
     ["Gérant", (d) => d.gerant],
     ["Téléphone", (d) => d.telephone],
-    ["Mail", (d) => d.mail],
+    ["E-mail", (d) => d.mail],
     ["Adresse", (d) => d.adresse],
     ["Source", (d) => (d.source ? SOURCES[d.source] : "")],
     ["Devis envoyé le", (d) => jour(d.devis_fait_le)],
@@ -514,5 +527,6 @@ function exporterCsv(dossiers: Dossier[], today: string) {
   a.href = url;
   a.download = `dossiers-mcaisse-${today}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
+  // Différé : Safari sur iPhone annule le téléchargement si l'adresse est libérée tout de suite
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

@@ -3,18 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Membre } from "@/lib/types";
-import { IconCalendar, IconChart, IconChevronLeft, IconFolder, IconPlus, IconSun } from "./icons";
+import { IconChevronLeft, IconPlus } from "./icons";
 import { McaisseLogo, McaisseMark } from "./McaisseLogo";
+import { NAV, TabBar, type Page } from "./navigation";
 import { SignOutButton } from "./SignOutButton";
 
-export type Page = "aujourdhui" | "dossiers" | "agenda" | "equipe";
-
-const NAV: { key: Page; href: string; label: string; Icon: (p: { className?: string }) => React.ReactNode }[] = [
-  { key: "aujourdhui", href: "/", label: "Aujourd’hui", Icon: IconSun },
-  { key: "dossiers", href: "/dossiers", label: "Dossiers", Icon: IconFolder },
-  { key: "agenda", href: "/agenda", label: "Agenda", Icon: IconCalendar },
-  { key: "equipe", href: "/equipe", label: "Équipe", Icon: IconChart },
-];
+export type { Page };
 
 export type Action = { label: string; href?: string; onClick?: () => void };
 
@@ -91,7 +85,7 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
                 </span>
               </p>
             )}
-            <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-balance">{title}</h1>
+            <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-balance break-words">{title}</h1>
             {subtitle && <p className="mt-0.5 text-[14px] text-muted">{subtitle}</p>}
           </div>
           {action && <ActionLink action={action} className="hidden h-11 rounded-xl px-4 lg:flex" />}
@@ -106,34 +100,18 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
       {action && (
         <ActionLink
           action={action}
-          className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom,0px))] z-30 h-14 rounded-full px-5 shadow-[0_8px_22px_rgba(17,94,245,.35)] lg:hidden"
+          className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom,0px))] z-30 flex h-14 rounded-full px-5 shadow-[0_8px_22px_rgba(17,94,245,.35)] lg:hidden"
         />
       )}
 
-      <nav
-        aria-label="Navigation principale"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-white/95 px-2 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] backdrop-blur-md lg:hidden"
-      >
-        {NAV.map(({ key, href, label, Icon }) => (
-          <Link
-            key={key}
-            href={href}
-            aria-current={key === page ? "page" : undefined}
-            className={`flex min-h-12 flex-col items-center justify-center gap-0.5 text-[11.5px] ${
-              key === page ? "font-bold text-brand" : "font-semibold text-muted"
-            }`}
-          >
-            <Icon className="size-[22px]" />
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <TabBar page={page} />
     </div>
   );
 }
 
+/** `className` doit donner l'affichage (flex), sinon l'icône (svg en bloc) passe au-dessus du texte. */
 function ActionLink({ action, className }: { action: Action; className: string }) {
-  const cls = `items-center gap-2 bg-brand font-bold text-white flex-none ${className}`;
+  const cls = `items-center gap-2 whitespace-nowrap bg-brand font-bold text-white flex-none ${className}`;
   const content = (
     <>
       <IconPlus className="size-5" />

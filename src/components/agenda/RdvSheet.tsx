@@ -47,6 +47,7 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
   /** Chevauchement signalé : le prochain envoi enregistre quand même. */
   const [conflict, setConflict] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [suppression, setSuppression] = useState(false);
 
   const dossier = dossiers.find((d) => d.id === dossierId);
   const saisie = JSON.stringify([dossierId, restaurant, commercial, type, jour, debut, fin, adresse, notes]);
@@ -76,12 +77,12 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
     e.preventDefault();
     const nom = (dossier?.restaurant ?? restaurant).trim();
     if (!nom) return setError("Indique le nom du restaurant.");
-    if (!commercial) return setError("Aucun commercial dans l'équipe : ajoute-en un dans Administration.");
+    if (!commercial) return setError("Aucun commercial dans l’équipe : ajoute-en un dans Administration.");
     if (!jour) return setError("Indique la date du RDV.");
     // Un RDV déjà passé garde sa date ; sinon, pas de RDV planifié dans le passé
     if (jour < today && jour !== r?.jour) return setError("Choisis une date à partir d’aujourd’hui.");
-    if (!debut || !fin) return setError("Indique l'heure de début et de fin.");
-    if (fin <= debut) return setError("L'heure de fin doit être après l'heure de début.");
+    if (!debut || !fin) return setError("Indique l’heure de début et de fin.");
+    if (fin <= debut) return setError("L’heure de fin doit être après l’heure de début.");
 
     const input: RendezVousInput = {
       dossier_id: dossier?.id ?? null,
@@ -116,9 +117,11 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
   async function remove() {
     if (!r) return;
     if (!confirm(`Supprimer le RDV « ${r.restaurant} » du ${fmtJour(r.jour)} ? Cette action est définitive.`)) return;
+    setSuppression(true);
     setBusy(true);
     const err = await onDelete(r);
     setBusy(false);
+    setSuppression(false);
     if (err) setError(err);
   }
 
@@ -126,7 +129,7 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
 
   return (
     <form onSubmit={submit} noValidate className="pb-4.5">
-      <h2 className="mb-3.5 text-xl font-bold">{r ? "Modifier le RDV" : "Nouveau RDV"}</h2>
+      <h2 className="mb-3.5 pr-12 text-xl font-bold">{r ? "Modifier le RDV" : "Nouveau RDV"}</h2>
 
       <label className="mb-3 block">
         <span className={label}>Dossier</span>
@@ -237,11 +240,11 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
       )}
 
       <button disabled={busy} className="w-full rounded-2xl bg-brand py-4 font-bold text-white disabled:opacity-60">
-        {busy ? "Enregistrement…" : conflict ? "Enregistrer quand même" : r ? "Enregistrer" : "Ajouter le RDV"}
+        {busy && !suppression ? "Enregistrement…" : conflict ? "Enregistrer quand même" : r ? "Enregistrer" : "Planifier le RDV"}
       </button>
       {r && (
-        <button type="button" disabled={busy} onClick={remove} className="mt-2 w-full rounded-2xl py-4 font-bold text-danger">
-          Supprimer ce RDV
+        <button type="button" disabled={busy} onClick={remove} className="mt-2 w-full rounded-2xl py-4 font-bold text-danger disabled:opacity-60">
+          {busy && suppression ? "Suppression…" : "Supprimer ce RDV"}
         </button>
       )}
     </form>

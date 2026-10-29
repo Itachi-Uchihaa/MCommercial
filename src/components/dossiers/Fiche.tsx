@@ -44,9 +44,9 @@ type Props = {
 const ACTION_ETAPE: Record<StepKey, string> = {
   devis_fait: "Marquer le devis envoyé",
   devis_accepte: "Marquer le devis accepté",
-  signature: "Marquer comme signé",
+  signature: "Marquer le dossier signé",
   enrolement_tpe: "Marquer le TPE enrôlé",
-  installe: "Marquer comme installé",
+  installe: "Marquer le dossier installé",
 };
 
 const RESULTATS: Record<ResultatRdv, string> = { positif: "positif", a_relancer: "à relancer", pas_interesse: "pas intéressé" };
@@ -60,7 +60,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
   const [sheet, setSheet] = useState<{ edit: boolean; key: number }>({ edit: false, key: 0 });
   const [perte, setPerte] = useState({ open: false, key: 0 });
   const [cr, setCr] = useState<RendezVous | null>(null);
-  const { toast, showToast } = useToast();
+  const { toast, showToast, showError } = useToast();
 
   const suivante = prochaineEtape(d);
   const futurs = rdvs.filter((r) => !rdvPasse(r, today, nowTime));
@@ -71,10 +71,14 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
   function etape(key: StepKey, fait: boolean) {
     const nom = STEPS.find((s) => s.key === key)!.long;
     if (!fait && !confirm(`Décocher « ${nom} » ? La date de l’étape sera effacée.`)) return;
+    // Sauter des étapes arrive surtout par erreur (un appui sur « Installé ») : on demande
+    const avant = STEPS.slice(0, STEPS.findIndex((s) => s.key === key)).filter((s) => !isDone(d, s.key));
+    if (fait && avant.length && !confirm(`Cocher « ${nom} » alors que « ${avant[0].long} » n’est pas encore coché ?`)) return;
     start(async () => {
       appliquer(patchEtape(key, fait, today));
       const res = await changerEtape(d.id, key, fait);
-      showToast(res.ok ? (fait ? `« ${nom} » enregistré` : `« ${nom} » décoché`) : res.error);
+      if (res.ok) showToast(`Étape « ${nom} » ${fait ? "cochée" : "décochée"}`);
+      else showError(res.error);
     });
   }
 
@@ -82,7 +86,8 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
     start(async () => {
       appliquer({ perdu_le: null, raison_perte: null });
       const res = await rouvrirDossier(d.id);
-      showToast(res.ok ? "Dossier rouvert" : res.error);
+      if (res.ok) showToast("Dossier rouvert");
+      else showError(res.error);
     });
   }
 
@@ -91,7 +96,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
     startNote(async () => {
       const res = await ajouterNote(d.id, note);
       if (res.ok) setNote("");
-      else showToast(res.error);
+      else showError(res.error);
     });
   }
 
@@ -139,7 +144,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
         {d.mail && (
           <a href={`mailto:${d.mail}`} className={RACCOURCI}>
             <IconMail />
-            Mail
+            E-mail
           </a>
         )}
         {d.adresse && (
@@ -150,7 +155,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
         )}
         <Link href={`/agenda?dossier=${d.id}`} className={RACCOURCI}>
           <IconCalendar />
-          RDV
+          Planifier
         </Link>
       </div>
 
@@ -216,7 +221,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
           <section aria-labelledby="rdv" className="card p-4">
             <div className="flex items-center justify-between">
               <h2 id="rdv" className="text-[17px] font-bold">
-                Rendez-vous
+                RDV
               </h2>
               <Link href={`/agenda?dossier=${d.id}`} className="flex min-h-11 items-center text-[14px] font-bold text-brand">
                 + Planifier
@@ -227,9 +232,9 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
               {[...futurs, ...passes].map((r) => {
                 const passe = rdvPasse(r, today, nowTime);
                 return (
-                  <li key={r.id} className={`rounded-xl p-3 ${passe ? "bg-[#f7f8fa]" : "bg-[#f5f8ff]"}`}>
+                  <li key={r.id} className={`rounded-xl ${passe ? "bg-[#f7f8fa]" : "bg-[#f5f8ff]"}`}>
                     {/* Ouvre le RDV dans l'agenda, prêt à être modifié */}
-                    <Link href={`/agenda?rdv=${r.id}`} className="flex items-center gap-2">
+                    <Link href={`/agenda?rdv=${r.id}`} className="flex items-center gap-2 p-3">
                       <span className="min-w-0 flex-1">
                         <span className={`block font-bold ${passe ? "text-ink-soft" : ""}`}>
                           {fmtJourCourt(r.jour)} · {fmtHeure(r.debut)} – {fmtHeure(r.fin)}
@@ -242,12 +247,12 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     </Link>
                     {passe &&
                       (r.compte_rendu_le ? (
-                        <p className="mt-2 text-[13.5px] text-ink-soft">
+                        <p className="px-3 pb-3 text-[13.5px] text-ink-soft">
                           <b className="font-semibold">Compte rendu :</b> {r.resultat ? RESULTATS[r.resultat] : "fait"}
                           {r.compte_rendu && `. ${r.compte_rendu}`}
                         </p>
                       ) : (
-                        <button onClick={() => setCr(r)} className="mt-2 min-h-11 rounded-xl bg-warn-soft px-3.5 text-[14px] font-bold text-warn">
+                        <button onClick={() => setCr(r)} className="mx-3 mb-3 min-h-11 rounded-xl bg-warn-soft px-3.5 text-[14px] font-bold text-warn">
                           Faire le compte rendu
                         </button>
                       ))}
@@ -307,7 +312,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                   </a>
                 )}
               </Info>
-              <Info label="Mail">
+              <Info label="E-mail">
                 {d.mail && (
                   <a href={`mailto:${d.mail}`} className="break-all text-brand">
                     {d.mail}
@@ -347,7 +352,8 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
             setPerte((p) => ({ ...p, open: false }));
             appliquer({ perdu_le: new Date().toISOString(), raison_perte: raison });
             const res = await marquerPerdu(d.id, raison);
-            showToast(res.ok ? "Dossier classé perdu" : res.error);
+            if (res.ok) showToast("Dossier classé perdu");
+            else showError(res.error);
           })
         }
       />
@@ -401,7 +407,7 @@ function Etape({
         {pastille}
         {!dernier && <span className={`min-h-5 w-0.5 flex-1 ${fait ? "bg-ok" : "bg-line"}`} />}
       </span>
-      <span className={`pb-3.5 text-left ${dernier ? "pb-0" : ""}`}>
+      <span className={`text-left ${dernier ? "" : "pb-3.5"}`}>
         <span className={`block ${courante ? "font-extrabold text-brand" : fait ? "font-semibold" : "font-semibold text-muted"}`}>
           {titre}
         </span>
@@ -461,7 +467,7 @@ function PerteSheet({ open, onClose, onConfirm }: { open: boolean; onClose: () =
   return (
     <BottomSheet open={open} onClose={onClose} label="Classer le dossier perdu">
       <div className="pb-4.5">
-        <h2 className="text-xl font-bold">Classer le dossier perdu</h2>
+        <h2 className="pr-12 text-xl font-bold">Classer le dossier perdu</h2>
         <p className="mt-1 text-[14px] text-muted">Il sort des relances et des chiffres en cours. Tu pourras le rouvrir.</p>
         <p id="raison" className="mt-4 mb-2 text-[14px] font-semibold">
           Pourquoi ?
@@ -473,8 +479,8 @@ function PerteSheet({ open, onClose, onConfirm }: { open: boolean; onClose: () =
               type="button"
               aria-pressed={raison === r}
               onClick={() => setRaison(r)}
-              className={`min-h-12 rounded-xl border px-2 text-[14.5px] ${
-                raison === r ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border-line font-semibold"
+              className={`min-h-12 rounded-xl px-2 text-[14.5px] ${
+                raison === r ? "border-2 border-brand bg-brand-soft font-bold text-brand-ink" : "border border-line font-semibold"
               }`}
             >
               {RAISONS_PERTE[r]}

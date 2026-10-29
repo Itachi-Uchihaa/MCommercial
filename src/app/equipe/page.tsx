@@ -4,7 +4,7 @@ import { Equipe } from "@/components/equipe/Equipe";
 import { addDays, mondayOf } from "@/lib/agenda";
 import { debutDuMois } from "@/lib/dates";
 import { relancesDe } from "@/lib/relances";
-import { requireMembre } from "@/lib/session";
+import { requireMembre, verifier } from "@/lib/session";
 import { PERIODES, bornes, statsEquipe, type Periode } from "@/lib/stats";
 import type { Dossier, Objectif, RendezVous } from "@/lib/types";
 
@@ -26,14 +26,15 @@ async function Contenu({ searchParams }: Pick<PageProps<"/equipe">, "searchParam
   // Assez d'historique pour le délai moyen (premier RDV d'un dossier signé dans la période)
   const depuis = addDays(b.debut < lundi ? b.debut : lundi, -180);
 
-  const [{ data: dossiersData }, { data: rdvsData }, { data: objectifsData }] = await Promise.all([
+  const [resDossiers, resRdvs, resObjectifs] = await Promise.all([
     supabase.from("dossiers").select("*").order("restaurant"),
     supabase.from("rendez_vous").select("*").gte("jour", depuis).lte("jour", addDays(lundi, 6)).order("jour").order("debut"),
     supabase.from("objectifs").select("*").gte("mois", `${today.slice(0, 4)}-01-01`).lte("mois", `${today.slice(0, 4)}-12-01`),
   ]);
-  const dossiers = (dossiersData ?? []) as Dossier[];
-  const rdvs = (rdvsData ?? []) as RendezVous[];
-  const objectifs = (objectifsData ?? []) as Objectif[];
+  verifier(resDossiers, resRdvs, resObjectifs);
+  const dossiers = (resDossiers.data ?? []) as Dossier[];
+  const rdvs = (resRdvs.data ?? []) as RendezVous[];
+  const objectifs = (resObjectifs.data ?? []) as Objectif[];
   const commerciaux = [...new Set([...equipe, ...rdvs.filter((r) => r.jour >= lundi).map((r) => r.commercial)])];
 
   const relances = relancesDe({ dossiers, rdvs, today, nowTime });

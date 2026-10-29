@@ -8,15 +8,15 @@ import type { Result } from "./dossiers";
 
 /**
  * Enregistre les objectifs de signatures d'un mois, par commercial.
- * Réservé à l'espace Administration : la table n'est modifiable qu'avec la clé secrète.
+ * Réservé à la direction (admins, directeurs) : la table n'est modifiable qu'avec la clé secrète.
  */
 export async function enregistrerObjectifs(mois: string, objectifs: Record<string, number>): Promise<Result> {
   try {
     await requireAdmin();
   } catch {
-    return { ok: false, error: "Seuls les administrateurs peuvent fixer les objectifs." };
+    return { ok: false, error: "Seule la direction peut fixer les objectifs." };
   }
-  if (!isIsoDate(mois) || !mois.endsWith("-01")) return { ok: false, error: "Mois invalide." };
+  if (!isIsoDate(mois) || !mois.endsWith("-01")) return { ok: false, error: "Mois inconnu. Recharge la page et réessaie." };
 
   const lignes = Object.entries(objectifs).map(([commercial, n]) => ({ commercial, mois, signatures: n }));
   if (lignes.some((l) => !Number.isInteger(l.signatures) || l.signatures < 0 || l.signatures > 999)) {

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { enregistrerPreferences, notificationTest, sAbonner, seDesabonner } from "@/app/actions/notifications";
-import { GROUPES_NOTIF, type TypeNotif } from "@/lib/notifications";
+import { groupesPour, type TypeNotif } from "@/lib/notifications";
+import type { Role } from "@/lib/types";
 
 type Support = "chargement" | "ok" | "ios" | "non";
 
@@ -38,7 +39,7 @@ async function registration() {
 }
 
 /** Section « Notifications » des Paramètres : abonner cet appareil, choisir ce qui déclenche une notification. */
-export function NotificationsReglage({ preferences }: { preferences: TypeNotif[] }) {
+export function NotificationsReglage({ preferences, role }: { preferences: TypeNotif[]; role: Role }) {
   const support = useSyncExternalStore(rien, detecter, () => "chargement" as const);
   const [actif, setActif] = useState<boolean | null>(null);
   const [message, setMessage] = useState<{ texte: string; erreur: boolean } | null>(null);
@@ -48,12 +49,14 @@ export function NotificationsReglage({ preferences }: { preferences: TypeNotif[]
   const [, startChoix] = useTransition();
 
   function basculer(t: TypeNotif) {
+    const avant = choix;
     const next = new Set(choix);
     if (next.has(t)) next.delete(t);
     else next.add(t);
     setChoix(next);
     startChoix(async () => {
       const res = await enregistrerPreferences([...next]);
+      if (!res.ok) setChoix(avant); // la case revient comme avant : rien n'a été enregistré
       setChoixMessage(res.ok ? { texte: "Choix enregistré.", erreur: false } : { texte: res.error, erreur: true });
     });
   }
@@ -79,7 +82,12 @@ export function NotificationsReglage({ preferences }: { preferences: TypeNotif[]
       // Demandée tout de suite après l'appui : sinon le navigateur refuse d'afficher la question
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setMessage({ texte: "Tu n’as pas autorisé les notifications. Tu peux réessayer quand tu veux.", erreur: true });
+        // Refus : le bandeau « bloquées » s'affiche à la place du bouton et explique quoi faire
+        setMessage(
+          permission === "denied"
+            ? null
+            : { texte: "Tu n’as pas répondu à la demande du navigateur. Touche à nouveau « Activer les notifications ».", erreur: true },
+        );
         return;
       }
       try {
@@ -151,6 +159,11 @@ export function NotificationsReglage({ preferences }: { preferences: TypeNotif[]
           </p>
         )}
 
+        {(support === "chargement" || (support === "ok" && !bloquees && actif === null)) && (
+          <p role="status" className="mt-3 text-[14px] text-muted">
+            Vérification…
+          </p>
+        )}
         {support === "ok" && !bloquees && actif === false && (
           <button
             onClick={activer}
@@ -179,7 +192,7 @@ export function NotificationsReglage({ preferences }: { preferences: TypeNotif[]
       <div className="card mt-3 p-3.5">
         <h3 className="text-[15px] font-bold">Me prévenir pour</h3>
         <p className="mt-0.5 text-[14px] text-muted">Tes choix valent pour tous tes appareils.</p>
-        {GROUPES_NOTIF.map((g) => (
+        {groupesPour(role).map((g) => (
           <fieldset key={g.titre} className="mt-4">
             <legend className="text-[13px] font-bold tracking-wider text-muted uppercase">{g.titre}</legend>
             {g.detail && <p className="text-[13px] text-muted">{g.detail}</p>}

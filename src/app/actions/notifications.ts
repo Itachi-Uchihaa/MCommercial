@@ -1,7 +1,7 @@
 "use server";
 
 import { RDV_TYPES, fmtHeure, fmtJourCourt } from "@/lib/agenda";
-import { estTypeNotif } from "@/lib/notifications";
+import { estTypeNotif, preferencesDe } from "@/lib/notifications";
 import { notifier, notifierEquipe, pushDisponible } from "@/lib/push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -23,11 +23,11 @@ type Abonnement = { endpoint: string; keys: { p256dh: string; auth: string } };
 
 /** Enregistre l'appareil du membre connecté pour recevoir ses notifications. */
 export async function sAbonner(sub: Abonnement, appareil: string): Promise<Result> {
-  if (!pushDisponible()) return { ok: false, error: "Les notifications ne sont pas encore configurées sur le serveur." };
+  if (!pushDisponible()) return { ok: false, error: "Les notifications ne sont pas encore disponibles. Préviens ton responsable." };
   const session = await moi();
   if (!session) return { ok: false, error: "Ta session a expiré : reconnecte-toi." };
   if (!/^https:\/\//.test(sub.endpoint) || !sub.keys?.p256dh || !sub.keys?.auth) {
-    return { ok: false, error: "Ce navigateur a renvoyé un abonnement invalide. Réessaie." };
+    return { ok: false, error: "Les notifications n’ont pas pu être activées sur ce navigateur. Recharge la page et réessaie." };
   }
   try {
     const admin = createAdminClient();
@@ -68,12 +68,14 @@ export async function notificationTest(): Promise<Result> {
   const session = await moi();
   if (!session) return { ok: false, error: "Ta session a expiré : reconnecte-toi." };
   const n = await notifier([session.email], {
-    title: "Notifications activées",
-    body: "Tu recevras ici tes nouveaux RDV et le récap du matin.",
+    title: "Notification de test",
+    body: "Tout marche : tu recevras ici les notifications choisies dans Paramètres.",
     url: "/",
     tag: "test",
   });
-  return n ? { ok: true } : { ok: false, error: "Aucun appareil n’a reçu la notification. Désactive puis réactive-les." };
+  return n
+    ? { ok: true }
+    : { ok: false, error: "Aucun appareil n’a reçu la notification. Touche « Désactiver », puis « Activer les notifications »." };
 }
 
 /**
@@ -122,9 +124,11 @@ export async function notifierRdv(rdvId: string, changement: "nouveau" | "modifi
 export async function enregistrerPreferences(types: string[]): Promise<Result> {
   const session = await moi();
   if (!session) return { ok: false, error: "Ta session a expiré : reconnecte-toi." };
+  // Ne garde que ce que le rôle permet (un commercial ne suit pas l'activité de l'équipe)
+  const permis = preferencesDe({ role: session.me.role });
   const { error } = await createAdminClient()
     .from("membres")
-    .update({ notifications: types.filter(estTypeNotif) })
+    .update({ notifications: types.filter(estTypeNotif).filter((t) => permis.includes(t)) })
     .eq("id", session.me.id);
   if (error) {
     console.error("Préférences de notification non enregistrées", error);

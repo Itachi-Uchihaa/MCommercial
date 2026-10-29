@@ -26,7 +26,7 @@ export type CompteRenduInput = {
 
 export async function enregistrerCompteRendu(input: CompteRenduInput): Promise<Result> {
   if (!RESULTATS.includes(input.resultat)) return { ok: false, error: "Indique comment s’est passé le RDV." };
-  if (input.suite && !SUITES.includes(input.suite)) return { ok: false, error: "Suite inconnue." };
+  if (input.suite && !SUITES.includes(input.suite)) return { ok: false, error: "Suite inconnue. Recharge la page et réessaie." };
   if (input.relanceLe && !isIsoDate(input.relanceLe)) return { ok: false, error: "La date de rappel n’est pas valide." };
 
   try {

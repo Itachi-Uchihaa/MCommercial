@@ -18,7 +18,7 @@ export function Parametres({ me }: { me: Membre }) {
   return (
     <>
       <header className="safe-top sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/90 px-4 pb-3 backdrop-blur-md">
-        <Link href="/" aria-label="Retour à l’accueil" className="grid size-10 place-items-center rounded-full bg-canvas text-xl">
+        <Link href="/" aria-label="Revenir à l’accueil" className="grid size-11 place-items-center rounded-full bg-canvas text-xl">
           ‹
         </Link>
         <div className="min-w-0 flex-1">
@@ -47,6 +47,8 @@ export function Parametres({ me }: { me: Membre }) {
               name="prenom"
               autoComplete="given-name"
               maxLength={40}
+              aria-invalid={!!error || undefined}
+              aria-describedby={error ? "erreur-prenom" : undefined}
               value={nom}
               onChange={(e) => {
                 setNom(e.target.value);
@@ -58,7 +60,7 @@ export function Parametres({ me }: { me: Membre }) {
             Visible par toute l’équipe : en haut de l’app, dans les filtres, sur tes dossiers et tes RDV.
           </p>
           {error && (
-            <p role="alert" className="mt-2.5 text-[13.5px] text-danger">
+            <p id="erreur-prenom" role="alert" className="mt-2.5 text-[13.5px] text-danger">
               {error}
             </p>
           )}
@@ -70,7 +72,7 @@ export function Parametres({ me }: { me: Membre }) {
           </button>
         </form>
 
-        <NotificationsReglage preferences={preferencesDe(me)} />
+        <NotificationsReglage preferences={preferencesDe(me)} role={me.role} />
       </main>
 
       <Toast message={toast} />

@@ -60,11 +60,11 @@ export default function ResetPage() {
         <PasswordField
           ref={champ}
           id="password"
-          label="Mot de passe"
+          label="Nouveau mot de passe"
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
-          invalid={!!erreur}
+          invalid={!!erreur && erreur !== "expire"}
           describedBy={erreur ? "erreur" : undefined}
         />
         <button

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Agenda } from "@/components/agenda/Agenda";
 import { Chargement } from "@/components/Chargement";
 import { addDays, isIsoDate, mondayOf } from "@/lib/agenda";
-import { requireMembre } from "@/lib/session";
+import { requireMembre, verifier } from "@/lib/session";
 import type { DossierLite, RendezVous } from "@/lib/types";
 
 /**
@@ -30,7 +30,7 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
       : { data: null };
   const week = mondayOf(ouvert?.jour ?? (isIsoDate(semaine) ? semaine : today));
 
-  const [{ data: rdvs }, { data: dossiers }, { data: avenir }] = await Promise.all([
+  const [resRdvs, resDossiers, resAvenir] = await Promise.all([
     supabase
       .from("rendez_vous")
       .select("*")
@@ -42,8 +42,12 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
     supabase.from("dossiers").select("id, restaurant, commercial").is("perdu_le", null).order("restaurant").returns<DossierLite[]>(),
     liste
       ? supabase.from("rendez_vous").select("*").gte("jour", today).order("jour").order("debut").limit(500).returns<RendezVous[]>()
-      : Promise.resolve({ data: null }),
+      : Promise.resolve({ data: null, error: null }),
   ]);
+  verifier(resRdvs, resDossiers, resAvenir);
+  const rdvs = resRdvs.data;
+  const dossiers = resDossiers.data;
+  const avenir = resAvenir.data;
 
   return (
     <Agenda

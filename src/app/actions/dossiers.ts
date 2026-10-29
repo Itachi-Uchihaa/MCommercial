@@ -42,8 +42,8 @@ function infosValides(input: DossierInfos): DossierInfos {
   if (!restaurant) throw new Refus("Indique le nom du restaurant.");
   if (!input.commercial) throw new Refus("Choisis le commercial qui suit ce dossier.");
   if (siret && siret.length !== 14) throw new Refus("Le SIRET doit faire 14 chiffres.");
-  if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Refus("L’adresse mail n’est pas valide.");
-  if (input.source && !SOURCES.includes(input.source)) throw new Refus("Source du contact inconnue.");
+  if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Refus("Cette adresse e-mail n’est pas valide. Vérifie-la.");
+  if (input.source && !SOURCES.includes(input.source)) throw new Refus("Source du contact inconnue. Recharge la page et réessaie.");
   return {
     restaurant,
     commercial: input.commercial,
@@ -59,7 +59,7 @@ function infosValides(input: DossierInfos): DossierInfos {
 }
 
 export async function creerDossier(input: DossierInfos): Promise<Result> {
-  return run("Le dossier n’a pas pu être créé.", async () => {
+  return run("Le dossier n’a pas pu être ajouté.", async () => {
     const supabase = await createClient();
     const infos = infosValides(input);
     const { data, error } = await supabase.from("dossiers").insert(infos).select("id").single();
@@ -102,7 +102,7 @@ export async function supprimerDossier(id: string): Promise<Result> {
 /** Coche ou décoche une étape. La base date l'étape et l'écrit dans le journal. */
 export async function changerEtape(id: string, key: StepKey, fait: boolean): Promise<Result> {
   return run("L’étape n’a pas pu être enregistrée.", async () => {
-    if (!STEP_KEYS.includes(key)) throw new Refus("Étape inconnue.");
+    if (!STEP_KEYS.includes(key)) throw new Refus("Étape inconnue. Recharge la page et réessaie.");
     const supabase = await createClient();
     const patch: Partial<Dossier> =
       key === "installe" ? { date_installation: fait ? todayParis() : null } : { [key]: fait };
@@ -183,7 +183,7 @@ export async function relanceFaite(id: string): Promise<Result> {
       .update({ relance_le: encoreDue ? addDays(today, DEVIS_SANS_REPONSE_JOURS) : null })
       .eq("id", id);
     if (error) throw error;
-    await supabase.from("journal").insert({ dossier_id: id, auteur: "", type: "note", texte: "Client relancé." });
+    await supabase.from("journal").insert({ dossier_id: id, auteur: "", type: "note", texte: "Relance faite." });
   });
 }
 
@@ -191,7 +191,7 @@ export async function ajouterNote(dossierId: string, texte: string): Promise<Res
   return run("La note n’a pas pu être ajoutée.", async () => {
     const t = texte.trim();
     if (!t) throw new Refus("Écris d’abord ta note.");
-    if (t.length > 2000) throw new Refus("La note doit faire 2 000 caractères maximum.");
+    if (t.length > 2000) throw new Refus("La note doit faire 2 000 caractères maximum.");
     const supabase = await createClient();
     const { data: claims } = await supabase.auth.getClaims();
     const { error } = await supabase

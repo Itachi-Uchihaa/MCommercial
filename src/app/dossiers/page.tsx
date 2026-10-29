@@ -4,7 +4,7 @@ import { DossiersList } from "@/components/dossiers/DossiersList";
 import { addDays } from "@/lib/agenda";
 import { FILTRES_ETAPE, type Etape } from "@/lib/dossiers";
 import { rdvPasse, relancesDe } from "@/lib/relances";
-import { requireMembre } from "@/lib/session";
+import { requireMembre, verifier } from "@/lib/session";
 import type { Dossier, RendezVous } from "@/lib/types";
 
 /** Dossiers, rangés par étape. ?etape=devis_fait&commercial=Lamia&q=zinc */
@@ -20,12 +20,13 @@ async function Contenu({ searchParams }: Pick<PageProps<"/dossiers">, "searchPar
   const { supabase, me, canAdmin, equipe, today, nowTime } = await requireMembre();
   const sp = await searchParams;
 
-  const [{ data: dossiersData }, { data: rdvsData }] = await Promise.all([
+  const [resDossiers, resRdvs] = await Promise.all([
     supabase.from("dossiers").select("*").order("updated_at", { ascending: false }),
     supabase.from("rendez_vous").select("*").gte("jour", addDays(today, -30)).order("jour").order("debut"),
   ]);
-  const dossiers = (dossiersData ?? []) as Dossier[];
-  const rdvs = (rdvsData ?? []) as RendezVous[];
+  verifier(resDossiers, resRdvs);
+  const dossiers = (resDossiers.data ?? []) as Dossier[];
+  const rdvs = (resRdvs.data ?? []) as RendezVous[];
 
   // Prochain RDV de chaque dossier
   const prochains: Record<string, RendezVous> = {};

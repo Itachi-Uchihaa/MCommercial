@@ -22,51 +22,64 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
 }
 
-html,
-body {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  overflow-x: hidden;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+/*
+ * Tout est rangé dans les couches de Tailwind : les classes ajoutées sur un élément
+ * (ex. « input pl-11 », « card border-warn-line ») passent bien devant ces styles de base.
+ */
+@layer base {
+  html,
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Contour visible au clavier (sans gêner le doigt), à l'intérieur pour ne pas être coupé par les listes */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: -2px;
+  }
+
+  /* Retour visuel à l'appui du doigt (le surlignage gris d'iOS est désactivé plus haut) */
+  :where(button, a, summary, [role="button"]):active:not(:disabled) {
+    opacity: 0.7;
+  }
 }
 
-/* Contour visible au clavier (sans gêner le doigt) */
-:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
-}
+@layer components {
+  /* Section : petit titre en capitales au-dessus d'une carte */
+  .section-title {
+    @apply mx-0.5 mb-2 text-[13px] font-bold tracking-wider text-muted uppercase;
+  }
+  .card {
+    @apply rounded-[18px] border border-line bg-white;
+  }
 
-/* Section : petit titre en capitales au-dessus d'une carte */
-.section-title {
-  @apply mx-0.5 mb-2 text-[13px] font-bold tracking-wider text-muted uppercase;
-}
-.card {
-  @apply rounded-[18px] border border-line bg-white;
-}
+  /* Champs de formulaire : 16px minimum pour éviter le zoom automatique sur iPhone */
+  .input {
+    @apply w-full min-h-12 rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-4 focus:ring-brand/15;
+  }
+  .input::placeholder {
+    color: #6b7280;
+  }
+  /* Champ en erreur : reste rouge, même sélectionné */
+  .input[aria-invalid="true"] {
+    @apply border-danger focus:border-danger focus:ring-danger/15;
+  }
 
-/* Champs de formulaire : 16px minimum pour éviter le zoom automatique sur iPhone */
-.input {
-  @apply w-full min-h-12 rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-4 focus:ring-brand/15;
-}
-.input::placeholder {
-  color: #6b7280;
-}
-/* Champ en erreur : reste rouge, même sélectionné */
-.input[aria-invalid="true"] {
-  @apply border-danger focus:border-danger focus:ring-danger/15;
-}
+  .safe-top {
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 
-.safe-top {
-  padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
-}
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.no-scrollbar {
-  scrollbar-width: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

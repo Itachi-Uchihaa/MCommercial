@@ -18,7 +18,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#115ef5",
+  // Même couleur que le fond de l'app : la barre du navigateur se fond dans l'écran
+  themeColor: "#f3f4f8",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

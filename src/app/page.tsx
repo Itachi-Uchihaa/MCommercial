@@ -6,7 +6,7 @@ import { Aujourdhui } from "@/components/aujourdhui/Aujourdhui";
 import { addDays } from "@/lib/agenda";
 import { debutDuMois, parisDay } from "@/lib/dates";
 import { relancesDe, rdvPasse } from "@/lib/relances";
-import { loadSession } from "@/lib/session";
+import { loadSession, verifier } from "@/lib/session";
 import type { Dossier, Objectif, RendezVous } from "@/lib/types";
 
 /** Accueil : objectif du mois, prochain RDV, RDV du jour et relances. */
@@ -47,14 +47,15 @@ async function Contenu() {
     qDossiers = qDossiers.eq("commercial", me.nom);
     qRdvs = qRdvs.eq("commercial", me.nom);
   }
-  const [{ data: dossiersData }, { data: rdvsData }, { data: objectifsData }] = await Promise.all([
+  const [resDossiers, resRdvs, resObjectifs] = await Promise.all([
     qDossiers,
     qRdvs,
     supabase.from("objectifs").select("*").eq("mois", mois),
   ]);
-  const dossiers = (dossiersData ?? []) as Dossier[];
-  const rdvs = (rdvsData ?? []) as RendezVous[];
-  const objectifs = (objectifsData ?? []) as Objectif[];
+  verifier(resDossiers, resRdvs, resObjectifs);
+  const dossiers = (resDossiers.data ?? []) as Dossier[];
+  const rdvs = (resRdvs.data ?? []) as RendezVous[];
+  const objectifs = (resObjectifs.data ?? []) as Objectif[];
 
   const signes = dossiers.filter((d) => d.signature_le && parisDay(d.signature_le) >= mois).length;
   const cibles = objectifs.filter((o) => !estCommercial || o.commercial === me.nom);

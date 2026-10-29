@@ -98,7 +98,7 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
           )}
         </>
       }
-      action={{ label: "Nouveau dossier", href: "/dossiers/nouveau" }}
+      action={{ label: "Ajouter un dossier", href: "/dossiers/nouveau" }}
     >
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <label className="relative block flex-1">
@@ -135,7 +135,7 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
               key={key}
               onClick={() => set({ etape: key })}
               aria-pressed={active}
-              className={`min-h-10 flex-none rounded-full border px-3.5 text-[14px] whitespace-nowrap ${
+              className={`min-h-11 flex-none rounded-full border px-3.5 text-[14px] whitespace-nowrap ${
                 active ? "border-brand bg-brand font-bold text-white" : "border-line bg-white font-semibold"
               }`}
             >
@@ -161,16 +161,28 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
       {visibles.length === 0 && (
         <div className="px-5 py-9 text-center text-muted">
           {dossiers.length === 0 ? (
-            <p>Aucun dossier pour l’instant. Ajoute le premier avec « Nouveau dossier ».</p>
-          ) : (
+            <p>Aucun dossier pour l’instant. Touche «&nbsp;Ajouter un dossier&nbsp;» pour commencer.</p>
+          ) : scope.length === 0 ? (
+            // Un commercial arrive filtré sur lui-même : rien à lui, mais l'équipe en a
+            <>
+              <p>
+                {filtres.commercial === me.nom
+                  ? "Aucun dossier pour toi pour l’instant."
+                  : `Aucun dossier pour ${filtres.commercial} pour l’instant.`}
+              </p>
+              <button onClick={() => set({ commercial: "Tous" })} className="mt-2 min-h-11 font-semibold text-brand">
+                Voir toute l’équipe
+              </button>
+            </>
+          ) : filtre ? (
             <>
               <p>Aucun dossier ne correspond à ces filtres.</p>
-              {filtre && (
-                <button onClick={() => set({ etape: "tous", q: "" })} className="mt-2 min-h-11 font-semibold text-brand">
-                  Effacer les filtres
-                </button>
-              )}
+              <button onClick={() => set({ etape: "tous", q: "" })} className="mt-2 min-h-11 font-semibold text-brand">
+                Effacer les filtres
+              </button>
             </>
+          ) : (
+            <p>Aucun dossier en cours. Les dossiers perdus sont dans «&nbsp;Perdus&nbsp;».</p>
           )}
         </div>
       )}

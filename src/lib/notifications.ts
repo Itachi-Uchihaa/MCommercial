@@ -31,9 +31,9 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
       { key: "compte_rendu", label: "Compte rendu de RDV" },
       { key: "devis_fait", label: "Devis envoyé" },
       { key: "devis_accepte", label: "Devis accepté" },
-      { key: "signature", label: "Signature" },
+      { key: "signature", label: "Dossier signé" },
       { key: "enrolement_tpe", label: "TPE enrôlé" },
-      { key: "installe", label: "Installation" },
+      { key: "installe", label: "Dossier installé" },
       { key: "perdu", label: "Dossier perdu" },
     ],
   },
@@ -41,13 +41,24 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
 
 export const TYPES_NOTIF: TypeNotif[] = GROUPES_NOTIF.flatMap((g) => g.types.map((t) => t.key));
 
+/** Seules notifications possibles pour un commercial : l'activité de l'équipe est réservée à la direction. */
+const TYPES_COMMERCIAL: TypeNotif[] = GROUPES_NOTIF[0].types.map((t) => t.key);
+
 export const estTypeNotif = (s: string): s is TypeNotif => (TYPES_NOTIF as string[]).includes(s);
 
+/** Groupes de choix proposés dans Paramètres selon le rôle (le récap du matin n'a pas le même contenu). */
+export function groupesPour(role: Role) {
+  const recap = role === "commercial" ? "Récap du matin (tes RDV du jour, tes relances)" : "Récap du matin (RDV de l’équipe, dossiers à débloquer)";
+  const groupes = GROUPES_NOTIF.map((g) => ({ ...g, types: g.types.map((t) => (t.key === "recap_matin" ? { ...t, label: recap } : t)) }));
+  return role === "commercial" ? groupes.slice(0, 1) : groupes;
+}
+
 /**
- * Notifications reçues par un membre : ses choix s'il en a fait,
- * sinon par défaut tout pour la direction, l'essentiel pour un commercial.
+ * Notifications reçues par un membre : ses choix s'il en a fait, sinon tout ce que son rôle permet.
+ * Un commercial ne reçoit jamais l'activité de l'équipe, même avec un ancien réglage.
  */
 export function preferencesDe(m: { role: Role; notifications?: string[] | null }): TypeNotif[] {
-  if (m.notifications) return m.notifications.filter(estTypeNotif);
-  return m.role === "commercial" ? ["rdv_pour_moi", "recap_matin"] : [...TYPES_NOTIF];
+  const permis = m.role === "commercial" ? TYPES_COMMERCIAL : TYPES_NOTIF;
+  const choisis = m.notifications ? m.notifications.filter(estTypeNotif) : permis;
+  return choisis.filter((t) => permis.includes(t));
 }

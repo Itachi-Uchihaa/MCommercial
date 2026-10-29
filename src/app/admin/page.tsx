@@ -3,13 +3,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminPanel, type MembreRow } from "@/components/admin/AdminPanel";
 import { AuthCard } from "@/components/AuthCard";
-import { getCurrentMembre, isAdminEmail } from "@/lib/auth";
+import { Chargement } from "@/components/Chargement";
+import { getCurrentMembre, peutAdministrer } from "@/lib/auth";
 import { createAdminClient, hasAdminKey } from "@/lib/supabase/admin";
 import type { Membre } from "@/lib/types";
 
 export default function AdminPage() {
   return (
-    <Suspense fallback={<main className="grid min-h-dvh place-items-center text-muted">Chargement…</main>}>
+    <Suspense fallback={<Chargement onglets={false} />}>
       <Contenu />
     </Suspense>
   );
@@ -18,16 +19,17 @@ export default function AdminPage() {
 async function Contenu() {
   const { email, me } = await getCurrentMembre();
   if (!email) redirect("/login");
-  if (!me || !isAdminEmail(me.email)) redirect("/");
+  if (!me || !peutAdministrer(me)) redirect("/");
 
+  // Clé SUPABASE_SECRET_KEY absente (.env.local / Vercel) : voir le README
   if (!hasAdminKey()) {
     return (
       <AuthCard
-        title="Clé admin manquante"
-        subtitle="Pour gérer les comptes, ajoute la variable SUPABASE_SECRET_KEY (clé secrète Supabase) dans .env.local et dans Vercel, puis redémarre l'app."
+        title="Gestion des comptes indisponible"
+        subtitle="La gestion des comptes n’est pas encore configurée. Préviens l’équipe technique."
       >
         <Link href="/" className="block w-full rounded-2xl bg-brand py-4 text-center font-bold text-white">
-          Retour aux dossiers
+          Revenir à l’accueil
         </Link>
       </AuthCard>
     );

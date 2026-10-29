@@ -94,6 +94,8 @@ export function Agenda({
   const filterRef = useRef(initialFilter);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
+  /** Dernier chargement en échec : on le dit, plutôt que d'afficher une semaine vide. */
+  const [erreurChargement, setErreurChargement] = useState(false);
   const [cr, setCr] = useState<RendezVous | null>(null);
   const { toast, showToast } = useToast();
   const [sheet, setSheet] = useState<SheetState>(() => {
@@ -141,10 +143,13 @@ export function Agenda({
       if (weekRef.current !== monday) return; // une autre semaine a été demandée entre-temps
       if (error) {
         console.error("Agenda non chargé", error);
-        showToast("L’agenda n’a pas pu se charger. Vérifie ta connexion et réessaie.");
-      } else setRdvs(data as RendezVous[]);
+        setErreurChargement(true);
+      } else {
+        setErreurChargement(false);
+        setRdvs(data as RendezVous[]);
+      }
     },
-    [supabase, showToast],
+    [supabase],
   );
 
   /** Vue Liste : RDV à venir, ou des 60 derniers jours (les plus récents d'abord). */
@@ -163,10 +168,15 @@ export function Agenda({
       setListeChargee(true);
       if (error) {
         console.error("Liste des RDV non chargée", error);
-        showToast("La liste n’a pas pu se charger. Vérifie ta connexion et réessaie.");
-      } else setListe(data as RendezVous[]);
+        // On ne garde pas l'ancienne liste : elle pourrait être celle de l'autre période
+        setListe([]);
+        setErreurChargement(true);
+      } else {
+        setErreurChargement(false);
+        setListe(data as RendezVous[]);
+      }
     },
-    [supabase, today, showToast],
+    [supabase, today],
   );
 
   const reload = useCallback(async () => {
@@ -270,7 +280,7 @@ export function Agenda({
     }
     const row = res.data as RendezVous;
     closeSheet();
-    showToast(id ? "RDV mis à jour" : "RDV ajouté");
+    showToast(id ? "RDV mis à jour" : "RDV planifié");
     // Le serveur prévient le commercial concerné et ceux qui suivent les RDV de l'équipe
     const change = !avant || avant.commercial !== row.commercial || avant.jour !== row.jour || avant.debut !== row.debut;
     if (change) notifierRdv(row.id, avant && avant.commercial === row.commercial ? "modifie" : "nouveau").catch(() => {});
@@ -320,7 +330,7 @@ export function Agenda({
       live={live}
       page="agenda"
       title="Agenda"
-      action={{ label: "Nouveau RDV", onClick: () => openNew() }}
+      action={{ label: "Planifier un RDV", onClick: () => openNew() }}
     >
       <div role="group" aria-label="Affichage" className="grid grid-cols-2 gap-0.5 rounded-xl bg-[#e6e8ef] p-[3px] sm:w-64">
         {(
@@ -333,7 +343,7 @@ export function Agenda({
             key={key}
             onClick={() => setVue(key)}
             aria-pressed={vue === key}
-            className={`min-h-10 rounded-[9px] text-[14px] ${
+            className={`min-h-11 rounded-[9px] text-[14px] ${
               vue === key ? "bg-white font-bold shadow-[0_1px_3px_rgba(15,23,51,.12)]" : "font-semibold text-muted"
             }`}
           >
@@ -385,7 +395,7 @@ export function Agenda({
               key={c}
               onClick={() => setFilter(c)}
               aria-pressed={active}
-              className={`flex min-h-10 flex-none items-center gap-1.5 rounded-full border px-3.5 text-[15px] whitespace-nowrap ${
+              className={`flex min-h-11 flex-none items-center gap-1.5 rounded-full border px-3.5 text-[15px] whitespace-nowrap ${
                 active ? "border-brand bg-brand text-white" : "border-line bg-white"
               }`}
             >
@@ -402,7 +412,17 @@ export function Agenda({
         })}
       </div>
 
-      {vue === "liste" ? (
+      {erreurChargement ? (
+        <div role="alert" className="card mt-4 px-4 py-4 text-[14.5px]">
+          <p>L’agenda n’a pas pu se charger. Vérifie ta connexion.</p>
+          <button
+            onClick={() => (vueRef.current === "liste" ? loadListe(periodeRef.current) : loadWeek(weekRef.current))}
+            className="mt-1 min-h-11 font-semibold text-brand"
+          >
+            Réessayer
+          </button>
+        </div>
+      ) : vue === "liste" ? (
         <AgendaListe
           rdvs={visibles}
           loading={!listeChargee}
@@ -436,7 +456,7 @@ export function Agenda({
                   {day >= today && (
                     <button
                       onClick={() => openNew(day)}
-                      aria-label={`Ajouter un RDV le ${fmtJour(day)}`}
+                      aria-label={`Planifier un RDV le ${fmtJour(day)}`}
                       className="-my-2 -mr-2 grid size-11 place-items-center rounded-full text-2xl leading-none text-brand"
                     >
                       +

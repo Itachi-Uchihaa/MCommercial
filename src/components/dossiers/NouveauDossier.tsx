@@ -41,6 +41,9 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
   const [pending, start] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const derniere = useRef(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const nomRef = useRef<HTMLInputElement>(null);
+  const [nomInvalide, setNomInvalide] = useState(false);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -77,11 +80,19 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
     setChoisi(e.siret);
     setManuel(false);
     setError(null);
+    setNomInvalide(false);
     setInfos((i) => ({ ...i, restaurant: e.nom, adresse: e.adresse, gerant: e.gerant, siret: e.siret, activite: e.activite }));
+    // Sur téléphone, le formulaire apparaît sous la liste : on l'amène à l'écran
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!infos.restaurant.trim()) {
+      setError("Indique le nom du restaurant.");
+      setNomInvalide(true);
+      return nomRef.current?.focus();
+    }
     setError(null);
     start(async () => {
       const res = await creerDossier(infos);
@@ -120,7 +131,12 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
         <div aria-live="polite" className="mt-2 text-[14px]">
           {etat === "recherche" && <p className="text-muted">Recherche…</p>}
           {etat === "erreur" && (
-            <p className="text-danger">L’annuaire ne répond pas. Réessaie dans un instant, ou saisis le dossier à la main.</p>
+            <p className="text-danger">
+              L’annuaire ne répond pas. Réessaie dans un instant, ou saisis le dossier à la main.{" "}
+              <button type="button" onClick={() => chercher(recherche)} className="inline-flex min-h-11 items-center font-semibold text-brand">
+                Réessayer
+              </button>
+            </p>
           )}
           {etat === "pret" && resultats?.length === 0 && (
             <p className="text-muted">Aucune entreprise trouvée. Essaie avec la ville, ou le SIRET.</p>
@@ -129,7 +145,8 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
 
         {!!resultats?.length && (
           <ul className="card mt-2 overflow-hidden">
-            {resultats.map((r, i) => {
+            {/* Une fois un établissement choisi, on ne garde que lui */}
+            {(choisi ? resultats.filter((r) => r.siret === choisi) : resultats).map((r, i) => {
               const actif = choisi === r.siret;
               const deja = suiviPar(r.siret);
               return (
@@ -166,6 +183,12 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
           </ul>
         )}
 
+        {choisi && (resultats?.length ?? 0) > 1 && (
+          <button type="button" onClick={() => setChoisi(null)} className="mt-1 min-h-11 font-semibold text-brand">
+            Choisir un autre établissement
+          </button>
+        )}
+
         {!choisi && !manuel && (
           <button type="button" onClick={() => setManuel(true)} className="mt-3 min-h-11 font-semibold text-brand">
             Je ne le trouve pas : saisir à la main
@@ -173,7 +196,7 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
         )}
 
         {(choisi || manuel) && (
-          <form onSubmit={submit} noValidate className="mt-5">
+          <form ref={formRef} onSubmit={submit} noValidate className="mt-5 scroll-mt-4">
             {choisi && (
               <p className="mb-3 flex items-center gap-1.5 text-[13.5px] font-semibold text-ok-ink">
                 <IconCheck className="size-4" />
@@ -188,14 +211,24 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
                 </Link>
               </p>
             )}
-            <DossierFields value={infos} onChange={(p) => setInfos((i) => ({ ...i, ...p }))} commerciaux={commerciaux} meNom={me.nom} />
+            <DossierFields
+              value={infos}
+              onChange={(p) => {
+                setInfos((i) => ({ ...i, ...p }));
+                if (p.restaurant !== undefined) setNomInvalide(false);
+              }}
+              commerciaux={commerciaux}
+              meNom={me.nom}
+              restaurantRef={nomRef}
+              restaurantInvalide={nomInvalide}
+            />
             {error && (
               <p role="alert" className="mb-2.5 text-[13.5px] text-danger">
                 {error}
               </p>
             )}
             <button disabled={pending} className="w-full rounded-2xl bg-brand py-4 font-bold text-white disabled:opacity-60">
-              {pending ? "Création…" : doublon ? "Créer quand même" : "Ajouter le dossier"}
+              {pending ? "Ajout…" : doublon ? "Ajouter quand même" : "Ajouter le dossier"}
             </button>
           </form>
         )}

@@ -11,7 +11,7 @@ import type { Membre, RendezVous } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { CompteRenduSheet } from "../CompteRenduSheet";
-import { IconCheck, IconFolder, IconPhone, IconRoute } from "../icons";
+import { IconCalendar, IconCheck, IconFolder, IconPhone, IconRoute } from "../icons";
 import { Toast, useToast } from "../Toast";
 
 type Props = {
@@ -36,7 +36,7 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
   const [cr, setCr] = useState<RendezVous | null>(null);
   const [enCours, setEnCours] = useState<string | null>(null);
   const [, start] = useTransition();
-  const { toast, showToast } = useToast();
+  const { toast, showToast, showError } = useToast();
 
   function relance(r: Relance) {
     if (!r.dossierId) return;
@@ -44,7 +44,8 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
     start(async () => {
       const res = await relanceFaite(r.dossierId!);
       setEnCours(null);
-      showToast(res.ok ? "Relance notée dans le journal" : res.error);
+      if (res.ok) showToast("Relance notée dans le journal");
+      else showError(res.error);
     });
   }
 
@@ -54,9 +55,9 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
       canAdmin={canAdmin}
       live={live}
       page="aujourdhui"
-      title={`Bonjour ${me.nom}`}
+      title={`Bonjour, ${me.nom}`}
       subtitle={maj(fmtJour(today))}
-      action={{ label: "Nouveau dossier", href: "/dossiers/nouveau" }}
+      action={{ label: "Ajouter un dossier", href: "/dossiers/nouveau" }}
     >
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <div className="space-y-5">
@@ -98,10 +99,17 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
                       Appeler
                     </a>
                   )}
-                  <Link href={prochain.dossier_id ? `/dossiers/${prochain.dossier_id}` : "/agenda"} className={ACTION}>
-                    <IconFolder />
-                    {prochain.dossier_id ? "Fiche" : "Agenda"}
-                  </Link>
+                  {prochain.dossier_id ? (
+                    <Link href={`/dossiers/${prochain.dossier_id}`} className={ACTION}>
+                      <IconFolder />
+                      Voir la fiche
+                    </Link>
+                  ) : (
+                    <Link href={`/agenda?rdv=${prochain.id}`} className={ACTION}>
+                      <IconCalendar />
+                      Voir le RDV
+                    </Link>
+                  )}
                 </div>
               </article>
             </section>
@@ -116,9 +124,9 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
                 {duJour.map((r, i) => {
                   const fini = passes.includes(r.id);
                   return (
-                    <li key={r.id} className={`flex min-h-15 items-center gap-3 px-4 py-2 ${i ? "border-t border-line" : ""}`}>
+                    <li key={r.id} className={`flex min-h-15 flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2 ${i ? "border-t border-line" : ""}`}>
                       <span className={`w-12 font-bold tabular-nums ${fini ? "text-muted" : ""}`}>{fmtHeure(r.debut)}</span>
-                      <span className="min-w-0 flex-1">
+                      <span className="min-w-0 flex-1 basis-32">
                         <span className={`block font-semibold break-words ${fini ? "text-muted" : ""}`}>{r.restaurant}</span>
                         <span className="flex items-center gap-1.5 text-[13px] text-muted">
                           {!estCommercial && (
@@ -135,8 +143,8 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
                             Compte rendu fait
                           </span>
                         ) : (
-                          <button onClick={() => setCr(r)} className="min-h-11 rounded-xl bg-warn-soft px-3 text-[14px] font-bold text-warn">
-                            Compte rendu
+                          <button onClick={() => setCr(r)} className="ml-auto min-h-11 rounded-xl bg-warn-soft px-3 text-[14px] font-bold text-warn">
+                            Faire le compte rendu
                           </button>
                         ))}
                     </li>
@@ -144,9 +152,9 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
                 })}
               </ol>
             ) : (
-              <p className="card px-4 py-4 text-[14.5px] text-muted">
+              <p className="card px-4 py-2.5 text-[14.5px] text-muted">
                 Aucun RDV aujourd’hui.{" "}
-                <Link href="/agenda" className="font-semibold text-brand">
+                <Link href="/agenda" className="inline-flex min-h-11 items-center font-semibold text-brand">
                   Ouvrir l’agenda
                 </Link>
               </p>
@@ -161,27 +169,27 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
           {relances.length ? (
             <ul className="space-y-2">
               {relances.map((r) => (
-                <li key={r.cle} className="card flex items-center gap-3 py-2.5 pr-2.5 pl-4">
+                <li key={r.cle} className="card flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 pr-2.5 pl-4">
                   {r.dossierId ? (
-                    <Link href={`/dossiers/${r.dossierId}`} className="min-w-0 flex-1 py-1">
+                    <Link href={`/dossiers/${r.dossierId}`} className="min-w-0 flex-1 basis-40 py-1">
                       <RelanceTexte r={r} estCommercial={estCommercial} />
                     </Link>
                   ) : (
-                    <span className="min-w-0 flex-1 py-1">
+                    <span className="min-w-0 flex-1 basis-40 py-1">
                       <RelanceTexte r={r} estCommercial={estCommercial} />
                     </span>
                   )}
                   {r.type === "compte_rendu" ? (
-                    <button onClick={() => setCr(r.rdv!)} className="min-h-11 flex-none rounded-xl bg-warn-soft px-3.5 text-[14px] font-bold text-warn">
-                      Compléter
+                    <button onClick={() => setCr(r.rdv!)} className="ml-auto min-h-11 flex-none rounded-xl bg-warn-soft px-3.5 text-[14px] font-bold text-warn">
+                      Faire le compte rendu
                     </button>
                   ) : (
                     <button
                       onClick={() => relance(r)}
                       disabled={enCours === r.cle}
-                      className="min-h-11 flex-none rounded-xl bg-warn-soft px-3.5 text-[14px] font-bold text-warn disabled:opacity-60"
+                      className="ml-auto min-h-11 flex-none rounded-xl bg-warn-soft px-3.5 text-[14px] font-bold text-warn disabled:opacity-60"
                     >
-                      {enCours === r.cle ? "Envoi…" : "J’ai relancé"}
+                      {enCours === r.cle ? "Enregistrement…" : "J’ai relancé"}
                     </button>
                   )}
                 </li>
@@ -245,7 +253,7 @@ function Objectif({
           {canAdmin && (
             <>
               {" "}
-              <Link href="/equipe#objectifs" className="font-semibold text-brand">
+              <Link href="/equipe#objectifs" className="inline-flex min-h-11 items-center font-semibold text-brand">
                 Fixer les objectifs
               </Link>
             </>

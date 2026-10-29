@@ -98,7 +98,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={basculer}
             aria-label={pause ? "Lire la vidéo" : "Mettre la vidéo en pause"}
-            className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65"
+            className="absolute top-4 right-4 z-10 grid size-11 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65"
           >
             {pause ? (
               <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden>
@@ -120,9 +120,9 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <div className="hidden min-[900px]:block">
             <McaisseLogo sombre />
           </div>
-          <h2 className="max-w-[18ch] text-[26px] leading-tight font-bold tracking-tight text-balance min-[900px]:mt-3 min-[900px]:text-[34px]">
+          <p className="max-w-[18ch] text-[26px] leading-tight font-bold tracking-tight text-balance min-[900px]:mt-3 min-[900px]:text-[34px]">
             Ton équipe, sur le terrain.
-          </h2>
+          </p>
           <p className="mt-1.5 hidden max-w-[44ch] text-[15px] text-white/80 min-[900px]:block">
             Dossiers, agenda et relances de toute l’équipe commerciale, au même endroit et en direct.
           </p>

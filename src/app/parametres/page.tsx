@@ -1,11 +1,12 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { Chargement } from "@/components/Chargement";
 import { Parametres } from "@/components/Parametres";
 import { getCurrentMembre } from "@/lib/auth";
 
 export default function ParametresPage() {
   return (
-    <Suspense fallback={<main className="grid min-h-dvh place-items-center text-muted" aria-busy="true">Chargement…</main>}>
+    <Suspense fallback={<Chargement onglets={false} />}>
       <Contenu />
     </Suspense>
   );

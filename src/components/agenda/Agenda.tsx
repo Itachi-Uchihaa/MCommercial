@@ -49,6 +49,8 @@ type Props = {
   openForDossier: string | null;
   /** RDV à ouvrir directement (lien depuis la fiche dossier). */
   openRdv: RendezVous | null;
+  /** Jour pour lequel ouvrir directement « Nouveau RDV » (liens « Aucun RDV » des autres pages). */
+  openNouveau: string | null;
 };
 
 type SheetState = { open: boolean; rdv: RendezVous | null; defaults: RdvDefaults; key: number };
@@ -79,6 +81,7 @@ export function Agenda({
   initialFilter,
   openForDossier,
   openRdv,
+  openNouveau,
 }: Props) {
   const supabase = createClient();
   const [vue, setVueState] = useState<Vue>(initialVue);
@@ -101,18 +104,20 @@ export function Agenda({
   const { toast, showToast } = useToast();
   const [sheet, setSheet] = useState<SheetState>(() => {
     const d = openForDossier ? initialDossiers.find((x) => x.id === openForDossier) : undefined;
+    // Sans dossier : le commercial filtré, sinon soi-même si on est commercial
+    const commercial = d?.commercial ?? (initialFilter !== "Tous" ? initialFilter : equipe.includes(me.nom) ? me.nom : (equipe[0] ?? ""));
     return {
-      open: !!d || !!openRdv,
+      open: !!d || !!openRdv || !!openNouveau,
       rdv: openRdv,
-      defaults: { jour: today, commercial: d?.commercial ?? "", dossier_id: d?.id ?? null },
+      defaults: { jour: openNouveau ?? today, commercial, dossier_id: d?.id ?? null },
       key: 0,
     };
   });
 
   // Les liens « Planifier un RDV » et « ouvrir ce RDV » ne doivent pas rouvrir la fiche au rechargement
   useEffect(() => {
-    if (openForDossier || openRdv) syncUrl(initialVue, initialWeek, today, initialFilter);
-  }, [openForDossier, openRdv, initialVue, initialWeek, today, initialFilter]);
+    if (openForDossier || openRdv || openNouveau) syncUrl(initialVue, initialWeek, today, initialFilter);
+  }, [openForDossier, openRdv, openNouveau, initialVue, initialWeek, today, initialFilter]);
 
   const nomDossier = useMemo(() => new Map(dossiers.map((d) => [d.id, d.restaurant])), [dossiers]);
   const source = vue === "liste" ? liste : rdvs;
@@ -436,6 +441,7 @@ export function Agenda({
           showCommercial={filter === "Tous"}
           onEdit={openEdit}
           onCompteRendu={setCr}
+          onNouveau={() => openNew()}
         />
       ) : (
         <div aria-busy={loading} className={`lg:grid lg:grid-cols-2 lg:gap-x-5 ${loading ? "opacity-50" : ""}`}>
@@ -481,6 +487,15 @@ export function Agenda({
                   </div>
                 ) : loading ? (
                   <Squelette className="h-[50px]" arrondi="rounded-[18px]" />
+                ) : day >= today ? (
+                  // Jour vide (aujourd'hui ou à venir) : le toucher ouvre « Nouveau RDV » ce jour-là, comme le +
+                  <button
+                    onClick={() => openNew(day)}
+                    className="flex min-h-12 w-full items-center justify-between gap-2 rounded-[18px] border border-dashed border-line px-3.5 py-3 text-left text-[14px] text-muted hover:border-brand/40 hover:bg-white"
+                  >
+                    Aucun RDV
+                    <span className="font-semibold text-brand">+ Planifier</span>
+                  </button>
                 ) : (
                   <p className="rounded-[18px] border border-dashed border-line px-3.5 py-3 text-[14px] text-muted">Aucun RDV</p>
                 )}

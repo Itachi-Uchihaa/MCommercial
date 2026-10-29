@@ -100,6 +100,12 @@ export async function supprimerDossier(id: string): Promise<Result> {
     if (readError) throw readError;
     if (!d) throw new Refus("Ce dossier a déjà été supprimé. Recharge la page.");
     if (!me || !peutSupprimer(me, d)) throw new Refus("Tu ne peux supprimer que tes propres dossiers.");
+    // Les fichiers du menu d'abord : la règle de suppression du stockage a besoin du dossier
+    const { data: fichiers } = await supabase.from("menu_fichiers").select("chemin").eq("dossier_id", id);
+    if (fichiers?.length) {
+      const { error: stockage } = await supabase.storage.from("menus").remove(fichiers.map((f) => f.chemin));
+      if (stockage) console.error("Fichiers du menu non supprimés", stockage);
+    }
     const { error } = await supabase.from("dossiers").delete().eq("id", id);
     if (error) throw error;
   });

@@ -112,3 +112,16 @@ export type StepKey = "rdv" | "devis_fait" | "signature" | "groupe_sav" | "form"
 
 /** Étapes cochées à la main (« RDV » se coche toute seule quand le premier RDV a eu lieu). */
 export type EtapeManuelle = Exclude<StepKey, "rdv">;
+
+/** Photo ou PDF du menu d'un restaurant (étape « Groupe SAV créé »). */
+export type MenuFichier = {
+  id: string;
+  dossier_id: string;
+  /** Chemin dans l'espace de stockage « menus » : <id du dossier>/<fichier>. */
+  chemin: string;
+  nom: string;
+  type: string;
+  taille: number;
+  created_by: string | null;
+  created_at: string;
+};

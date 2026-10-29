@@ -29,6 +29,7 @@ import { CompteRenduSheet } from "../CompteRenduSheet";
 import { IconCalendar, IconCheck, IconChevronRight, IconClock, IconMail, IconPhone, IconRoute } from "../icons";
 import { Toast, useToast } from "../Toast";
 import { DossierSheet } from "./DossierSheet";
+import { MenuSav, type FichierMenu } from "./MenuSav";
 
 type Props = {
   me: Membre;
@@ -41,6 +42,8 @@ type Props = {
   rdvs: RendezVous[];
   /** Journal, du plus récent au plus ancien. */
   journal: JournalEntry[];
+  /** Photos ou PDF du menu (étape « Groupe SAV créé »), avec leur lien signé. */
+  menu: FichierMenu[];
 };
 
 const ACTION_ETAPE: Record<EtapeManuelle, string> = {
@@ -53,8 +56,8 @@ const ACTION_ETAPE: Record<EtapeManuelle, string> = {
 
 const RESULTATS: Record<ResultatRdv, string> = { positif: "positif", a_relancer: "à relancer", pas_interesse: "pas intéressé" };
 
-export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, journal }: Props) {
-  const live = useRealtimeRefresh(["dossiers", "rendez_vous", "journal"]);
+export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, journal, menu }: Props) {
+  const live = useRealtimeRefresh(["dossiers", "rendez_vous", "journal", "menu_fichiers"]);
   const [d, appliquer] = useOptimistic(dossier, (cur: Dossier, patch: Partial<Dossier>) => ({ ...cur, ...patch }));
   const [pending, start] = useTransition();
   const [notePending, startNote] = useTransition();
@@ -223,6 +226,19 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     }
                     onToggle={d.perdu_le ? undefined : () => etape(s.key as EtapeManuelle, !fait)}
                     disabled={pending}
+                    extra={
+                      // Menu du restaurant, facultatif : proposé dès que le dossier en est à cette étape
+                      s.key === "groupe_sav" && (fait || courante || menu.length > 0) ? (
+                        <MenuSav
+                          dossierId={d.id}
+                          restaurant={d.restaurant}
+                          fichiers={menu}
+                          peutSupprimer={supprimable}
+                          onMessage={showToast}
+                          onErreur={showError}
+                        />
+                      ) : undefined
+                    }
                   />
                 );
               })}
@@ -430,6 +446,7 @@ function Etape({
   detail,
   onToggle,
   disabled,
+  extra,
 }: {
   fait: boolean;
   courante?: boolean;
@@ -438,6 +455,8 @@ function Etape({
   detail?: string;
   onToggle?: () => void;
   disabled?: boolean;
+  /** Contenu sous l'étape, hors du bouton (ex. le menu à l'étape « Groupe SAV créé »). */
+  extra?: React.ReactNode;
 }) {
   const pastille = fait ? (
     <span className="grid size-6 place-items-center rounded-full bg-ok text-white">
@@ -470,6 +489,15 @@ function Etape({
         </button>
       ) : (
         <div className="flex gap-3">{contenu}</div>
+      )}
+      {extra && (
+        // Le trait du parcours continue à gauche du contenu ajouté
+        <div className="flex gap-3">
+          <span aria-hidden className="flex w-6 flex-none justify-center">
+            {!dernier && <span className={`w-0.5 ${fait ? "bg-ok" : "bg-line"}`} />}
+          </span>
+          <div className="-mt-2 min-w-0 flex-1 pb-3.5">{extra}</div>
+        </div>
       )}
     </li>
   );

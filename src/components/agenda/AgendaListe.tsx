@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { RDV_TYPES, colorOf, fmtHeure, fmtJour } from "@/lib/agenda";
 import { rdvPasse } from "@/lib/relances";
 import type { RendezVous } from "@/lib/types";
+import { Squelette } from "../Chargement";
 import { IconCheck, IconChevronRight, IconSearch } from "../icons";
 
 export type PeriodeListe = "avenir" | "passes";
@@ -95,9 +96,14 @@ export function AgendaListe({
       </div>
 
       <p className="mx-0.5 mt-3 text-[13px] text-muted">
-        {loading
-          ? "Chargement…"
-          : `${total} RDV ${periode === "avenir" ? "à venir" : "sur les 60 derniers jours"}${q.trim() ? " pour cette recherche" : ""}`}
+        {loading ? (
+          <>
+            <span className="sr-only">Chargement…</span>
+            <Squelette className="my-0.5 h-3.5 w-40" />
+          </>
+        ) : (
+          `${total} RDV ${periode === "avenir" ? "à venir" : "sur les 60 derniers jours"}${q.trim() ? " pour cette recherche" : ""}`
+        )}
       </p>
 
       <div aria-busy={loading} className={loading ? "opacity-50" : ""}>

@@ -83,3 +83,85 @@
     display: none;
   }
 }
+
+/* Écrans de chargement (Chargement.tsx) : blocs qui scintillent et logo qui se dessine */
+@layer components {
+  .squelette {
+    background: linear-gradient(100deg, #e6e9f0 30%, #f4f5f9 50%, #e6e9f0 70%);
+    background-size: 300% 100%;
+    animation: scintille 1.5s ease-in-out infinite;
+  }
+
+  .progression {
+    animation: progression 1.3s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  }
+
+  .trace path {
+    stroke-dasharray: 1;
+    animation: trace 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  .trace circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: pastille 2.2s ease-in-out infinite;
+  }
+}
+
+@keyframes progression {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes scintille {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* Tracé qui apparaît, reste un instant, puis s'efface dans le même sens */
+@keyframes trace {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  8%,
+  92% {
+    opacity: 1;
+  }
+  45%,
+  60% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -1;
+    opacity: 0;
+  }
+}
+
+@keyframes pastille {
+  0%,
+  35%,
+  100% {
+    transform: scale(0);
+  }
+  50%,
+  65% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .squelette,
+  .progression,
+  .trace path,
+  .trace circle {
+    animation: none;
+  }
+}

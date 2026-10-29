@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { RDV_TYPES, addDays, fmtHeure, todayParis } from "@/lib/agenda";
+import { RDV_TYPES, addDays, fmtHeureLongue, todayParis } from "@/lib/agenda";
 import { parisTime } from "@/lib/dates";
 import { preferencesDe } from "@/lib/notifications";
 import { notifier } from "@/lib/push";
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         title: `Bonjour, ${m.nom}`,
         body: [
           premier
-            ? `${siens.length} RDV aujourd’hui, le premier à ${fmtHeure(premier.debut)} (${RDV_TYPES[premier.type]} chez ${premier.restaurant})`
+            ? `${siens.length} RDV aujourd’hui, le premier à ${fmtHeureLongue(premier.debut)} (${RDV_TYPES[premier.type]} chez ${premier.restaurant})`
             : "Aucun RDV aujourd’hui",
           relances.length ? `${relances.length} à relancer` : null,
         ]

@@ -54,6 +54,12 @@ export function fmtSemaine(monday: string) {
 /** « 09:30 » (Postgres renvoie « 09:30:00 »). */
 export const fmtHeure = (t: string) => t.slice(0, 5);
 
+/** « 10 h » ou « 10 h 30 » (notifications) */
+export const fmtHeureLongue = (t: string) => {
+  const [h, m] = t.split(":");
+  return `${Number(h)} h${m && m !== "00" ? ` ${m}` : ""}`;
+};
+
 export const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 export const fromMin = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;

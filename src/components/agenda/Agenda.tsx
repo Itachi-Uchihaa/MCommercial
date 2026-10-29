@@ -19,6 +19,7 @@ import { rdvPasse } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/client";
 import type { DossierLite, Membre, RendezVous, RendezVousInput } from "@/lib/types";
 import { AppShell } from "../AppShell";
+import { Squelette } from "../Chargement";
 import { CompteRenduSheet } from "../CompteRenduSheet";
 import { IconCheck, IconChevronRight } from "../icons";
 import { Toast, useToast } from "../Toast";
@@ -478,10 +479,10 @@ export function Agenda({
                       />
                     ))}
                   </div>
+                ) : loading ? (
+                  <Squelette className="h-[50px]" arrondi="rounded-[18px]" />
                 ) : (
-                  <p className="rounded-[18px] border border-dashed border-line px-3.5 py-3 text-[14px] text-muted">
-                    {loading ? "Chargement…" : "Aucun RDV"}
-                  </p>
+                  <p className="rounded-[18px] border border-dashed border-line px-3.5 py-3 text-[14px] text-muted">Aucun RDV</p>
                 )}
               </section>
             );

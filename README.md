@@ -55,7 +55,7 @@ Sans cette étape, le lien « Mot de passe oublié » ne ramène pas vers l'app.
 
 ## Gérer les comptes
 
-L'espace **Administration** est ouvert aux rôles **admin** et **directeur**, plus les emails éventuellement listés dans `ADMIN_EMAILS`. Un directeur ne peut ni modifier ni supprimer un compte admin.
+L'espace **Administration** est ouvert aux rôles **admin** et **directeur**, plus les emails éventuellement listés dans `ADMIN_EMAILS`. Un directeur ne voit pas les comptes admin (ni dans la liste ni dans les compteurs) et ne peut ni les modifier ni les supprimer.
 
 Une personne autorisée ouvre le menu (rond en haut à droite sur téléphone, menu de gauche sur ordinateur) → **Administration**. Elle peut y :
 - **ajouter un compte** : prénom, email, rôle et mot de passe provisoire (généré automatiquement), puis copier le message à envoyer à la personne ;

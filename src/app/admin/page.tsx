@@ -46,7 +46,10 @@ async function Contenu() {
   const nbDossiers = new Map<string, number>();
   (dossiers ?? []).forEach((d) => nbDossiers.set(d.commercial, (nbDossiers.get(d.commercial) ?? 0) + 1));
 
-  const rows: MembreRow[] = (membres ?? []).map((m) => {
+  // Les comptes admin ne sont visibles que des admins : un directeur ne les voit pas dans la liste (ni dans les compteurs)
+  const visibles = (membres ?? []).filter((m) => m.role !== "admin" || me.role === "admin");
+
+  const rows: MembreRow[] = visibles.map((m) => {
     const u = byEmail.get(m.email.toLowerCase());
     return {
       ...m,

@@ -21,8 +21,10 @@ type Props = {
   equipe: string[];
   today: string;
   nowTime: string;
+  /** Période choisie au chargement (?periode=). */
   periode: Periode;
-  stats: StatsEquipe;
+  /** Chiffres des trois périodes, calculés d'avance : le changement de période est instantané. */
+  stats: Record<Periode, StatsEquipe>;
   /** Nombre de relances en attente, par commercial. */
   aRelancer: Record<string, number>;
   /** Relances et dossiers signés qui n'avancent plus. */
@@ -34,6 +36,13 @@ type Props = {
   dossiers: Dossier[];
 };
 
+/**
+ * Colonne des noms du tableau « Semaine de l'équipe » : fixe au défilement, titre compris.
+ * Le fond blanc déborde à gauche (marge du conteneur) et à droite (espace entre les cases) :
+ * les jours qui défilent passent dessous sans se voir.
+ */
+const COLONNE_FIXE = "sticky left-0 z-10 bg-white shadow-[-16px_0_0_0_#fff,8px_0_0_0_#fff]";
+
 /** « Lun. » */
 const jourCourt = (day: string) => {
   const s = new Date(`${day}T00:00:00Z`).toLocaleDateString("fr-FR", { weekday: "short", timeZone: "UTC" });
@@ -41,7 +50,14 @@ const jourCourt = (day: string) => {
 };
 
 export function Equipe(props: Props) {
-  const { me, canAdmin, equipe, today, nowTime, periode, stats: s, aRelancer, blocages, semaine, objectifsDuMois, dossiers } = props;
+  const { me, canAdmin, equipe, today, nowTime, stats, aRelancer, blocages, semaine, objectifsDuMois, dossiers } = props;
+  const [periode, setPeriodeState] = useState(props.periode);
+  const s = stats[periode];
+  // Garde la période dans l'adresse (rechargement, lien partagé) sans recharger la page
+  const setPeriode = (p: Periode) => {
+    setPeriodeState(p);
+    window.history.replaceState(null, "", p === "mois" ? "/equipe" : `/equipe?periode=${p}`);
+  };
   const live = useRealtimeRefresh(["dossiers", "rendez_vous", "objectifs"]);
   const [objectifs, setObjectifs] = useState({ open: false, key: 0 });
   const { toast, showToast } = useToast();
@@ -64,20 +80,20 @@ export function Equipe(props: Props) {
       subtitle={`${s.bornes.label} · ${equipe.length} commercia${equipe.length > 1 ? "ux" : "l"}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <nav aria-label="Période" className="grid grid-cols-3 gap-0.5 rounded-xl bg-[#e6e8ef] p-[3px]">
+        <div role="group" aria-label="Période" className="grid grid-cols-3 gap-0.5 rounded-xl bg-[#e6e8ef] p-[3px]">
           {PERIODES.map((p) => (
-            <Link
+            <button
               key={p.key}
-              href={`/equipe?periode=${p.key}`}
-              aria-current={p.key === periode ? "page" : undefined}
+              onClick={() => setPeriode(p.key)}
+              aria-pressed={p.key === periode}
               className={`flex min-h-11 items-center justify-center rounded-[9px] px-3.5 text-[14px] ${
                 p.key === periode ? "bg-white font-bold shadow-[0_1px_3px_rgba(15,23,51,.12)]" : "font-semibold text-muted"
               }`}
             >
               {p.label}
-            </Link>
+            </button>
           ))}
-        </nav>
+        </div>
         <button
           onClick={() => exporterCsv(dossiers, today)}
           className="hidden min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-4 font-semibold sm:flex"
@@ -276,7 +292,7 @@ export function Equipe(props: Props) {
           <table className="w-full min-w-[640px] table-fixed border-separate border-spacing-1.5 text-[13px] tabular-nums">
             <thead>
               <tr className="text-[12.5px] text-muted">
-                <th scope="col" className="w-24 text-left font-bold">
+                <th scope="col" className={`w-24 text-left font-bold ${COLONNE_FIXE}`}>
                   Commercial
                 </th>
                 {jours.map((j) => (
@@ -289,7 +305,7 @@ export function Equipe(props: Props) {
             <tbody>
               {commerciaux.map((c) => (
                 <tr key={c}>
-                  <th scope="row" className="sticky left-0 z-10 bg-white pt-2 text-left align-top font-bold">
+                  <th scope="row" className={`pt-2 text-left align-top font-bold ${COLONNE_FIXE}`}>
                     {c}
                   </th>
                   {jours.map((j) => {

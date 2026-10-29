@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { enregistrerObjectifs } from "@/app/actions/objectifs";
 import { RDV_TYPES, addDays, colorOf, fmtHeure, mondayOf } from "@/lib/agenda";
 import { deMois, debutDuMois, parisDay } from "@/lib/dates";
-import { RAISONS_PERTE, SOURCES, etapeDe, FILTRES_ETAPE } from "@/lib/dossiers";
+import { EQUIPEMENTS, RAISONS_PERTE, SOURCES, etapeDe, FILTRES_ETAPE } from "@/lib/dossiers";
 import type { Relance } from "@/lib/relances";
 import { PERIODES, type Periode, type StatsEquipe } from "@/lib/stats";
 import type { Dossier, Membre, RendezVous } from "@/lib/types";
@@ -510,6 +510,7 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["Adresse", (d) => d.adresse],
     ["Source", (d) => (d.source ? SOURCES[d.source] : "")],
     ["Premier RDV le", (d) => d.rdv_le],
+    ...EQUIPEMENTS.map(({ key, label }): [string, (d: Dossier) => string] => [`Devis : ${label}`, (d) => String(d[key])]),
     ["Devis envoyé le", (d) => jour(d.devis_fait_le)],
     ["Signé le", (d) => jour(d.signature_le)],
     ["Groupe SAV créé le", (d) => jour(d.groupe_sav_le)],

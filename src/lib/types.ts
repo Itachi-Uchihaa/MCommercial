@@ -44,6 +44,12 @@ export type Dossier = {
   date_installation: string | null;
   /** Jour du premier RDV du dossier (tenu à jour par la base). */
   rdv_le: string | null;
+  /** Équipements du devis : quantités (0 à 99). */
+  devis_ipad: number;
+  devis_imprimante: number;
+  devis_tiroir_caisse: number;
+  devis_tpe: number;
+  devis_borne: number;
   perdu_le: string | null;
   raison_perte: RaisonPerte | null;
   /** Jour où le commercial veut être rappelé de relancer le client. */
@@ -106,6 +112,9 @@ export type RendezVousInput = Omit<
   RendezVous,
   "id" | "created_by" | "created_at" | "updated_at" | "resultat" | "suite" | "compte_rendu" | "compte_rendu_le"
 >;
+
+/** Quantités d'équipements prévues au devis. */
+export type Equipements = Pick<Dossier, "devis_ipad" | "devis_imprimante" | "devis_tiroir_caisse" | "devis_tpe" | "devis_borne">;
 
 /** Étapes affichées sur chaque carte, dans l'ordre du parcours commercial. */
 export type StepKey = "rdv" | "devis_fait" | "signature" | "groupe_sav" | "form" | "enrolement_tpe";

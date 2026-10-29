@@ -7,6 +7,7 @@ import { ajouterNote, changerEtape, marquerPerdu, rouvrirDossier, supprimerDossi
 import { RDV_TYPES, colorOf, fmtHeure, fmtJourCourt, mapsUrl } from "@/lib/agenda";
 import { depuis, fmtMoment, joursEntre, parisDay } from "@/lib/dates";
 import {
+  EQUIPEMENTS,
   RAISONS_PERTE,
   SOURCES,
   STEPS,
@@ -29,6 +30,7 @@ import { CompteRenduSheet } from "../CompteRenduSheet";
 import { IconCalendar, IconCheck, IconChevronRight, IconClock, IconMail, IconPhone, IconRoute } from "../icons";
 import { Toast, useToast } from "../Toast";
 import { DossierSheet } from "./DossierSheet";
+import { EquipementsDevis } from "./EquipementsDevis";
 import { MenuSav, type FichierMenu } from "./MenuSav";
 
 type Props = {
@@ -227,7 +229,16 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     onToggle={d.perdu_le ? undefined : () => etape(s.key as EtapeManuelle, !fait)}
                     disabled={pending}
                     extra={
-                      // Menu du restaurant, facultatif : proposé dès que le dossier en est à cette étape
+                      // Équipements du devis : toujours proposés (quantités à 0 par défaut)
+                      s.key === "devis_fait" ? (
+                        <EquipementsDevis
+                          key={EQUIPEMENTS.map((e) => d[e.key]).join("-")}
+                          dossierId={d.id}
+                          valeurs={d}
+                          onMessage={showToast}
+                          onErreur={showError}
+                        />
+                      ) : // Menu du restaurant, facultatif : proposé dès que le dossier en est à cette étape
                       s.key === "groupe_sav" && (fait || courante || menu.length > 0) ? (
                         <MenuSav
                           dossierId={d.id}

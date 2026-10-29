@@ -5,12 +5,12 @@ import { after } from "next/server";
 import { addDays, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
 import { acteur } from "@/lib/acteur";
-import { ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
+import { EQUIPEMENTS, ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
 import { getCurrentMembre } from "@/lib/auth";
 import { notifierEquipe } from "@/lib/push";
 import { DEVIS_SANS_REPONSE_JOURS } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/server";
-import type { Dossier, DossierInfos, EtapeManuelle, RaisonPerte, Source } from "@/lib/types";
+import type { Dossier, DossierInfos, EtapeManuelle, Equipements, RaisonPerte, Source } from "@/lib/types";
 
 export type Result = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -86,6 +86,21 @@ export async function modifierDossier(id: string, input: DossierInfos): Promise<
   return run("Le dossier n’a pas pu être enregistré.", async () => {
     const supabase = await createClient();
     const { error } = await supabase.from("dossiers").update(infosValides(input)).eq("id", id);
+    if (error) throw error;
+  });
+}
+
+/** Quantités d'équipements du devis (0 à 99 chacune). La base l'écrit dans le journal. */
+export async function enregistrerEquipements(id: string, input: Equipements): Promise<Result> {
+  return run("Les équipements n’ont pas pu être enregistrés.", async () => {
+    const patch = {} as Equipements;
+    for (const { key } of EQUIPEMENTS) {
+      const n = Number(input[key]);
+      if (!Number.isInteger(n) || n < 0 || n > 99) throw new Refus("Chaque quantité doit être un nombre entre 0 et 99.");
+      patch[key] = n;
+    }
+    const supabase = await createClient();
+    const { error } = await supabase.from("dossiers").update(patch).eq("id", id);
     if (error) throw error;
   });
 }

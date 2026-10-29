@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { fmtHeure, fmtJourCourt } from "@/lib/agenda";
 import { depuis, joursEntre } from "@/lib/dates";
-import { RAISONS_PERTE, STEPS, derniereEtape, niveau, villeDe } from "@/lib/dossiers";
+import { RAISONS_PERTE, STEPS, derniereEtape, niveau, resumeEquipements, villeDe } from "@/lib/dossiers";
 import type { Dossier, RendezVous } from "@/lib/types";
 import { IconClock } from "../icons";
 
@@ -18,6 +18,7 @@ type Props = {
 export function DossierCard({ dossier: d, today, prochain, relance, showCommercial }: Props) {
   const n = niveau(d);
   const derniere = derniereEtape(d);
+  const equipements = resumeEquipements(d);
   const meta = [showCommercial && d.commercial, villeDe(d.adresse)].filter(Boolean).join(" · ");
 
   return (
@@ -63,6 +64,7 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
           </span>
         )}
       </span>
+      {equipements && <span className="mt-1 block truncate text-[13px] text-muted">Devis : {equipements}</span>}
       {relance && <span className="mt-1 block text-[13px] font-semibold text-warn">{relance}</span>}
     </Link>
   );

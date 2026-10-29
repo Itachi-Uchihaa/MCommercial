@@ -1,6 +1,6 @@
 import { todayParis } from "@/lib/agenda";
 import { parisDay } from "@/lib/dates";
-import type { Dossier, EtapeManuelle, RaisonPerte, Source, StepKey } from "@/lib/types";
+import type { Dossier, EtapeManuelle, Equipements, RaisonPerte, Source, StepKey } from "@/lib/types";
 
 /** Les étapes du parcours, dans l'ordre. « RDV » se coche toute seule, les autres à la main. */
 export const STEPS: { key: StepKey; court: string; long: string }[] = [
@@ -133,3 +133,20 @@ export const telHref = (tel: string) => `tel:${tel.replace(/[^\d+]/g, "")}`;
 /** Un commercial ne supprime que ses dossiers ; la direction et les admins suppriment ceux de tout le monde. */
 export const peutSupprimer = (me: { role: string; nom: string }, d: { commercial: string }) =>
   me.role !== "commercial" || d.commercial === me.nom;
+
+/** Équipements proposés au devis, dans l'ordre d'affichage (« pluriel » pour le résumé). */
+export const EQUIPEMENTS: { key: keyof Equipements; label: string; pluriel: string }[] = [
+  { key: "devis_ipad", label: "iPad", pluriel: "iPad" },
+  { key: "devis_imprimante", label: "Imprimante", pluriel: "imprimantes" },
+  { key: "devis_tiroir_caisse", label: "Tiroir caisse", pluriel: "tiroirs caisse" },
+  { key: "devis_tpe", label: "TPE", pluriel: "TPE" },
+  { key: "devis_borne", label: "Borne", pluriel: "bornes" },
+];
+
+/** « 2 iPad · 1 imprimante · 1 TPE » (null si rien n'est prévu). */
+export function resumeEquipements(d: Equipements) {
+  const parts = EQUIPEMENTS.filter((e) => d[e.key] > 0).map(
+    (e) => `${d[e.key]} ${d[e.key] > 1 ? e.pluriel : e.label === "iPad" || e.label === "TPE" ? e.label : e.label.toLowerCase()}`,
+  );
+  return parts.length ? parts.join(" · ") : null;
+}

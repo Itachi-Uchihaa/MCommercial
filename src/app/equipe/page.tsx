@@ -5,7 +5,7 @@ import { addDays, mondayOf } from "@/lib/agenda";
 import { debutDuMois } from "@/lib/dates";
 import { relancesDe } from "@/lib/relances";
 import { requireMembre, verifier } from "@/lib/session";
-import { PERIODES, bornes, statsEquipe, type Periode } from "@/lib/stats";
+import { PERIODES, bornes, statsEquipe, type Periode, type StatsEquipe } from "@/lib/stats";
 import type { Dossier, Objectif, RendezVous } from "@/lib/types";
 
 /** Pilotage de l'équipe. ?periode=semaine|mois|trimestre */
@@ -21,10 +21,11 @@ async function Contenu({ searchParams }: Pick<PageProps<"/equipe">, "searchParam
   const { supabase, me, canAdmin, equipe, today, nowTime } = await requireMembre();
   const sp = await searchParams;
   const periode: Periode = PERIODES.some((p) => p.key === sp.periode) ? (sp.periode as Periode) : "mois";
-  const b = bornes(periode, today);
   const lundi = mondayOf(today);
-  // Assez d'historique pour le délai moyen (premier RDV d'un dossier signé dans la période)
-  const depuis = addDays(b.debut < lundi ? b.debut : lundi, -180);
+  // Les trois périodes sont calculées d'un coup : passer de l'une à l'autre est instantané, sans rechargement.
+  // Assez d'historique pour la plus longue, plus 180 jours pour le délai moyen (premier RDV d'un dossier signé).
+  const debut = [lundi, ...PERIODES.map((p) => bornes(p.key, today).debut)].sort()[0];
+  const depuis = addDays(debut, -180);
 
   const [resDossiers, resRdvs, resObjectifs] = await Promise.all([
     supabase.from("dossiers").select("*").order("restaurant"),
@@ -42,13 +43,18 @@ async function Contenu({ searchParams }: Pick<PageProps<"/equipe">, "searchParam
 
   return (
     <Equipe
+      key={periode}
       me={me}
       canAdmin={canAdmin}
       equipe={equipe}
       today={today}
       nowTime={nowTime}
       periode={periode}
-      stats={statsEquipe({ dossiers, rdvs, objectifs, commerciaux, today, periode })}
+      stats={
+        Object.fromEntries(
+          PERIODES.map((p) => [p.key, statsEquipe({ dossiers, rdvs, objectifs, commerciaux, today, periode: p.key })]),
+        ) as Record<Periode, StatsEquipe>
+      }
       aRelancer={Object.fromEntries(commerciaux.map((c) => [c, relances.filter((r) => r.commercial === c).length]))}
       blocages={relancesDe({ dossiers, rdvs, today, nowTime, blocages: true })}
       semaine={rdvs.filter((r) => r.jour >= lundi)}

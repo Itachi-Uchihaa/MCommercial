@@ -20,7 +20,7 @@ export default function AgendaPage({ searchParams }: PageProps<"/agenda">) {
 
 async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParams">) {
   const { supabase, me, canAdmin, equipe, today, nowTime } = await requireMembre();
-  const { semaine, dossier, commercial, rdv, vue } = await searchParams;
+  const { semaine, dossier, commercial, rdv, vue, nouveau } = await searchParams;
   const liste = vue === "liste";
 
   // Lien vers un RDV précis : on ouvre sa semaine et sa fiche
@@ -28,7 +28,9 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
     typeof rdv === "string" && /^[0-9a-f-]{36}$/i.test(rdv)
       ? await supabase.from("rendez_vous").select("*").eq("id", rdv).maybeSingle<RendezVous>()
       : { data: null };
-  const week = mondayOf(ouvert?.jour ?? (isIsoDate(semaine) ? semaine : today));
+  // ?nouveau=AAAA-MM-JJ : ouvre « Nouveau RDV » ce jour-là (jamais dans le passé)
+  const jourNouveau = isIsoDate(nouveau) ? (nouveau < today ? today : nouveau) : null;
+  const week = mondayOf(ouvert?.jour ?? jourNouveau ?? (isIsoDate(semaine) ? semaine : today));
 
   const [resRdvs, resDossiers, resAvenir] = await Promise.all([
     supabase
@@ -51,6 +53,9 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
 
   return (
     <Agenda
+      // Next garde la page en mémoire d'une visite à l'autre : un autre lien (autre commercial, autre semaine…)
+      // doit repartir de ses paramètres, pas du filtre choisi la fois d'avant
+      key={JSON.stringify([semaine, dossier, commercial, rdv, vue, nouveau])}
       me={me}
       canAdmin={canAdmin}
       equipe={equipe}
@@ -64,6 +69,7 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
       initialFilter={typeof commercial === "string" ? commercial : "Tous"}
       openForDossier={typeof dossier === "string" ? dossier : null}
       openRdv={ouvert ?? null}
+      openNouveau={jourNouveau}
     />
   );
 }

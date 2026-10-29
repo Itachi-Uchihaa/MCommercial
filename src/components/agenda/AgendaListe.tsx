@@ -22,6 +22,8 @@ type Props = {
   showCommercial: boolean;
   onEdit: (r: RendezVous) => void;
   onCompteRendu: (r: RendezVous) => void;
+  /** Ouvre « Nouveau RDV » (depuis « Aucun RDV à venir »). */
+  onNouveau: () => void;
 };
 
 const normalise = (s: string | null | undefined) => (s ?? "").toLowerCase();
@@ -39,6 +41,7 @@ export function AgendaListe({
   showCommercial,
   onEdit,
   onCompteRendu,
+  onNouveau,
 }: Props) {
   const [q, setQ] = useState("");
   const nom = (r: RendezVous) => (r.dossier_id && nomDossier.get(r.dossier_id)) || r.restaurant;
@@ -160,15 +163,20 @@ export function AgendaListe({
         ))}
       </div>
 
-      {!loading && total === 0 && (
-        <p className="px-5 py-9 text-center text-muted">
-          {q.trim()
-            ? "Aucun RDV ne correspond à cette recherche."
-            : periode === "avenir"
-              ? "Aucun RDV à venir. Touche « Planifier un RDV » pour en ajouter un."
-              : "Aucun RDV sur les 60 derniers jours."}
-        </p>
-      )}
+      {!loading && total === 0 &&
+        (!q.trim() && periode === "avenir" ? (
+          <button
+            onClick={onNouveau}
+            className="mt-4 flex min-h-14 w-full items-center justify-between gap-2 rounded-[18px] border border-dashed border-line px-4 py-3 text-left text-muted hover:border-brand/40 hover:bg-white"
+          >
+            Aucun RDV à venir
+            <span className="font-semibold text-brand">+ Planifier</span>
+          </button>
+        ) : (
+          <p className="px-5 py-9 text-center text-muted">
+            {q.trim() ? "Aucun RDV ne correspond à cette recherche." : "Aucun RDV sur les 60 derniers jours."}
+          </p>
+        ))}
     </>
   );
 }

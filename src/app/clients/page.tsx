@@ -22,6 +22,8 @@ async function Contenu({ searchParams }: Pick<PageProps<"/clients">, "searchPara
 
   return (
     <Clients
+      // Un autre lien repart de ses filtres, pas de ceux de la visite d'avant
+      key={JSON.stringify([sp.statut, sp.q])}
       me={me}
       canAdmin={canAdmin}
       dossiers={(res.data ?? []) as Dossier[]}

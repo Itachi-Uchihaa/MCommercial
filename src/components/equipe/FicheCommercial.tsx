@@ -159,7 +159,13 @@ export function FicheCommercial({ me, canAdmin, equipe, nom, today, nowTime, dos
               ))}
             </ul>
           ) : (
-            <p className="rounded-[18px] border border-dashed border-line px-3.5 py-3 text-[14px] text-muted">Aucun RDV prévu.</p>
+            <Link
+              href={`/agenda?commercial=${encodeURIComponent(nom)}&nouveau=${today}`}
+              className="flex min-h-12 items-center justify-between gap-2 rounded-[18px] border border-dashed border-line px-3.5 py-3 text-[14px] text-muted hover:border-brand/40 hover:bg-white"
+            >
+              Aucun RDV prévu
+              <span className="font-semibold text-brand">+ Planifier</span>
+            </Link>
           )}
           {aVenir.length > 5 && (
             <Link href={`/agenda?commercial=${encodeURIComponent(nom)}`} className="mt-1 flex min-h-11 items-center text-[14px] font-bold text-brand">

@@ -152,12 +152,13 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
                 })}
               </ol>
             ) : (
-              <p className="card px-4 py-2.5 text-[14.5px] text-muted">
-                Aucun RDV aujourd’hui.{" "}
-                <Link href="/agenda" className="inline-flex min-h-11 items-center font-semibold text-brand">
-                  Ouvrir l’agenda
-                </Link>
-              </p>
+              <Link
+                href={`/agenda?nouveau=${today}`}
+                className="card flex min-h-14 items-center justify-between gap-2 px-4 py-2.5 text-[14.5px] text-muted hover:border-brand/40"
+              >
+                Aucun RDV aujourd’hui
+                <span className="font-semibold text-brand">+ Planifier</span>
+              </Link>
             )}
           </section>
         </div>

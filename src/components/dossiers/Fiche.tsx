@@ -290,7 +290,15 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 + Planifier
               </Link>
             </div>
-            {rdvs.length === 0 && <p className="text-[14.5px] text-muted">Aucun RDV pour ce dossier.</p>}
+            {rdvs.length === 0 && (
+              <Link
+                href={`/agenda?dossier=${d.id}`}
+                className="flex min-h-12 items-center justify-between gap-2 rounded-[14px] border border-dashed border-line px-3.5 py-2.5 text-[14.5px] text-muted hover:border-brand/40"
+              >
+                Aucun RDV pour ce dossier
+                <span className="font-semibold text-brand">+ Planifier</span>
+              </Link>
+            )}
             <ul className="space-y-2">
               {[...futurs, ...passes].map((r) => {
                 const passe = rdvPasse(r, today, nowTime);

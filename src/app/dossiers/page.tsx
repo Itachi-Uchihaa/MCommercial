@@ -45,6 +45,8 @@ async function Contenu({ searchParams }: Pick<PageProps<"/dossiers">, "searchPar
 
   return (
     <DossiersList
+      // Un autre lien (autre commercial, autre étape) repart de ses filtres, pas de ceux de la visite d'avant
+      key={JSON.stringify([etape, commercial, sp.q])}
       me={me}
       canAdmin={canAdmin}
       equipe={equipe}

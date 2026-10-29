@@ -49,6 +49,8 @@ type Props = {
   openForDossier: string | null;
   /** RDV à ouvrir directement (lien depuis la fiche dossier). */
   openRdv: RendezVous | null;
+  /** Jour pour lequel ouvrir directement « Nouveau RDV » (liens « Aucun RDV » des autres pages). */
+  openNouveau: string | null;
 };
 
 type SheetState = { open: boolean; rdv: RendezVous | null; defaults: RdvDefaults; key: number };
@@ -79,6 +81,7 @@ export function Agenda({
   initialFilter,
   openForDossier,
   openRdv,
+  openNouveau,
 }: Props) {
   const supabase = createClient();
   const [vue, setVueState] = useState<Vue>(initialVue);
@@ -93,6 +96,7 @@ export function Agenda({
   const [dossiers, setDossiers] = useState<DossierLite[]>(initialDossiers);
   const [filter, setFilterState] = useState(initialFilter);
   const filterRef = useRef(initialFilter);
+  const filtresRef = useRef<HTMLDivElement>(null);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
   /** Dernier chargement en échec : on le dit, plutôt que d'afficher une semaine vide. */
@@ -101,18 +105,20 @@ export function Agenda({
   const { toast, showToast } = useToast();
   const [sheet, setSheet] = useState<SheetState>(() => {
     const d = openForDossier ? initialDossiers.find((x) => x.id === openForDossier) : undefined;
+    // Sans dossier : le commercial filtré, sinon soi-même si on est commercial
+    const commercial = d?.commercial ?? (initialFilter !== "Tous" ? initialFilter : equipe.includes(me.nom) ? me.nom : (equipe[0] ?? ""));
     return {
-      open: !!d || !!openRdv,
+      open: !!d || !!openRdv || !!openNouveau,
       rdv: openRdv,
-      defaults: { jour: today, commercial: d?.commercial ?? "", dossier_id: d?.id ?? null },
+      defaults: { jour: openNouveau ?? today, commercial, dossier_id: d?.id ?? null },
       key: 0,
     };
   });
 
   // Les liens « Planifier un RDV » et « ouvrir ce RDV » ne doivent pas rouvrir la fiche au rechargement
   useEffect(() => {
-    if (openForDossier || openRdv) syncUrl(initialVue, initialWeek, today, initialFilter);
-  }, [openForDossier, openRdv, initialVue, initialWeek, today, initialFilter]);
+    if (openForDossier || openRdv || openNouveau) syncUrl(initialVue, initialWeek, today, initialFilter);
+  }, [openForDossier, openRdv, openNouveau, initialVue, initialWeek, today, initialFilter]);
 
   const nomDossier = useMemo(() => new Map(dossiers.map((d) => [d.id, d.restaurant])), [dossiers]);
   const source = vue === "liste" ? liste : rdvs;
@@ -191,6 +197,8 @@ export function Agenda({
     filterRef.current = c;
     setFilterState(c);
     syncUrl(vueRef.current, weekRef.current, today, c);
+    // Le choisi passe en 2e position : on revient au début de la rangée pour qu'il reste sous les yeux
+    filtresRef.current?.scrollTo({ left: 0, behavior: "smooth" });
   }
 
   function setVue(v: Vue) {
@@ -321,6 +329,8 @@ export function Agenda({
   }
 
   const visibles = filter === "Tous" ? source : source.filter((r) => r.commercial === filter);
+  // Le commercial choisi passe juste après « Toute l'équipe », les autres gardent leur ordre
+  const ordreFiltres = filter === "Tous" ? commerciaux : [filter, ...commerciaux.filter((c) => c !== filter)];
   const days = Array.from({ length: 7 }, (_, i) => addDays(week, i));
   const currentWeek = mondayOf(today);
 
@@ -387,8 +397,8 @@ export function Agenda({
         </>
       )}
 
-      <div role="group" aria-label="Commercial" className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
-        {["Tous", ...commerciaux].map((c) => {
+      <div ref={filtresRef} role="group" aria-label="Commercial" className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
+        {["Tous", ...ordreFiltres].map((c) => {
           const n = c === "Tous" ? source.length : source.filter((r) => r.commercial === c).length;
           const active = filter === c;
           return (
@@ -436,6 +446,7 @@ export function Agenda({
           showCommercial={filter === "Tous"}
           onEdit={openEdit}
           onCompteRendu={setCr}
+          onNouveau={() => openNew()}
         />
       ) : (
         <div aria-busy={loading} className={`lg:grid lg:grid-cols-2 lg:gap-x-5 ${loading ? "opacity-50" : ""}`}>
@@ -481,6 +492,15 @@ export function Agenda({
                   </div>
                 ) : loading ? (
                   <Squelette className="h-[50px]" arrondi="rounded-[18px]" />
+                ) : day >= today ? (
+                  // Jour vide (aujourd'hui ou à venir) : le toucher ouvre « Nouveau RDV » ce jour-là, comme le +
+                  <button
+                    onClick={() => openNew(day)}
+                    className="flex min-h-12 w-full items-center justify-between gap-2 rounded-[18px] border border-dashed border-line px-3.5 py-3 text-left text-[14px] text-muted hover:border-brand/40 hover:bg-white"
+                  >
+                    Aucun RDV
+                    <span className="font-semibold text-brand">+ Planifier</span>
+                  </button>
                 ) : (
                   <p className="rounded-[18px] border border-dashed border-line px-3.5 py-3 text-[14px] text-muted">Aucun RDV</p>
                 )}

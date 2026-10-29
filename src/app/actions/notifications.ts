@@ -1,6 +1,7 @@
 "use server";
 
 import { RDV_TYPES, fmtHeureLongue, fmtJour } from "@/lib/agenda";
+import { nomPublic } from "@/lib/acteur";
 import { estTypeNotif, preferencesDe } from "@/lib/notifications";
 import { notifier, notifierEquipe, pushDisponible } from "@/lib/push";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -99,8 +100,8 @@ export async function notifierRdv(rdvId: string, changement: "nouveau" | "modifi
           title: changement === "nouveau" ? `Nouveau RDV pour toi : ${r.restaurant}` : `RDV modifié : ${r.restaurant}`,
           body:
             changement === "nouveau"
-              ? `${quoi}. Ajouté par ${session.me.nom}.`
-              : `Désormais : ${quoi}. Modifié par ${session.me.nom}.`,
+              ? `${quoi}. Ajouté par ${nomPublic(session.me)}.`
+              : `Désormais : ${quoi}. Modifié par ${nomPublic(session.me)}.`,
           url: `/agenda?rdv=${r.id}`,
           tag: `rdv-${r.id}`,
         },

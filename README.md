@@ -55,7 +55,7 @@ Sans cette étape, le lien « Mot de passe oublié » ne ramène pas vers l'app.
 
 ## Gérer les comptes
 
-L'espace **Administration** est ouvert aux rôles **admin** et **directeur**, plus les emails éventuellement listés dans `ADMIN_EMAILS`. Un directeur ne voit pas les comptes admin (ni dans la liste ni dans les compteurs) et ne peut ni les modifier ni les supprimer.
+L'espace **Administration** est ouvert aux rôles **admin** et **directeur**, plus les emails éventuellement listés dans `ADMIN_EMAILS`. Un directeur ne voit pas les comptes admin (ni dans la liste ni dans les compteurs, ni en base) et ne peut ni les modifier ni les supprimer. Ce qu'un admin fait (dossiers, RDV, notes) apparaît au nom de « l'équipe mcaisse » dans le journal et les notifications.
 
 Une personne autorisée ouvre le menu (rond en haut à droite sur téléphone, menu de gauche sur ordinateur) → **Administration**. Elle peut y :
 - **ajouter un compte** : prénom, email, rôle et mot de passe provisoire (généré automatiquement), puis copier le message à envoyer à la personne ;
@@ -85,6 +85,7 @@ Les évolutions se font par des fichiers datés dans `supabase/`, à exécuter u
 | `2026-10-29_parcours.sql` | Dates des étapes (posées par la base), perte et raison, source, coordonnées, jour de relance ; compte rendu des RDV ; table `journal` avec historique automatique ; table `objectifs` |
 | `2026-10-29_notifications.sql` | Table `push_abonnements` (appareils abonnés aux notifications) |
 | `2026-10-29_preferences_notifications.sql` | Colonne `membres.notifications` (notifications choisies dans Paramètres) |
+| `2026-10-29_admins_caches.sql` | Comptes admin lisibles seulement par les admins ; ce qu'un admin fait est signé « Équipe mcaisse » dans le journal |
 
 Les heures des RDV sont enregistrées sans fuseau (`time`) : ce sont des heures de Paris, saisies et affichées telles quelles.
 

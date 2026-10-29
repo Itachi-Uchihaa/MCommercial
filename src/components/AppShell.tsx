@@ -85,7 +85,7 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
                 </span>
               </p>
             )}
-            <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-balance break-words">{title}</h1>
+            <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-balance break-words hyphens-auto">{title}</h1>
             {subtitle && <p className="mt-0.5 text-[14px] text-muted">{subtitle}</p>}
           </div>
           {action && <ActionLink action={action} className="hidden h-11 rounded-xl px-4 lg:flex" />}

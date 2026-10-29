@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { addMembre, deleteMembre, resetPassword, updateRole, type ActionResult } from "@/app/admin/actions";
 import type { Membre, Role } from "@/lib/types";
 import { BottomSheet, useUnsavedGuard } from "../BottomSheet";
+import { IconPlus } from "../icons";
 import { Toast, useToast } from "../Toast";
 
 export type MembreRow = Membre & { hasAccount: boolean; lastSignIn: string | null; dossiers: number };
@@ -52,13 +53,23 @@ export function AdminPanel({ me, membres }: { me: Membre; membres: MembreRow[] }
 
   return (
     <>
-      <header className="safe-top sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/90 px-4 pb-3 backdrop-blur-md">
-        <Link href="/" aria-label="Revenir à l’accueil" className="grid size-11 place-items-center rounded-full bg-canvas text-xl">
-          ‹
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-extrabold tracking-tight">Administration</h1>
-          <p className="text-[13px] text-muted">Comptes de l’équipe</p>
+      {/* Contenu de l'en-tête à la largeur de la page : sur ordinateur, il n'est plus collé à gauche */}
+      <header className="safe-top sticky top-0 z-20 border-b border-line bg-white/90 px-4 pb-3 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <Link href="/" aria-label="Revenir à l’accueil" className="grid size-11 place-items-center rounded-full bg-canvas text-xl">
+            ‹
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-extrabold tracking-tight">Administration</h1>
+            <p className="text-[13px] text-muted">Comptes de l’équipe</p>
+          </div>
+          <button
+            onClick={() => setAjout((a) => ({ open: true, key: a.key + 1 }))}
+            className="hidden h-11 flex-none items-center gap-2 rounded-xl bg-brand px-4 font-bold text-white lg:flex"
+          >
+            <IconPlus className="size-5" />
+            Ajouter un compte
+          </button>
         </div>
       </header>
 
@@ -69,9 +80,10 @@ export function AdminPanel({ me, membres }: { me: Membre; membres: MembreRow[] }
             ["Commerciaux", counts.commerciaux],
             ["Sans connexion", counts.jamais],
           ].map(([label, value]) => (
-            <div key={label} className="card min-w-0 px-3 pt-3 pb-2.5">
+            <div key={label} className="card min-w-0 px-2.5 pt-3 pb-2.5 min-[375px]:px-3">
               <b className="block text-[28px] leading-tight font-extrabold text-brand tabular-nums">{value}</b>
-              <span className="block text-[13px] text-muted">{label}</span>
+              {/* Un peu plus petit sur les petits écrans : « Commerciaux » tient dans sa case */}
+              <span className="block text-[12px] leading-snug text-muted min-[375px]:text-[13px]">{label}</span>
             </div>
           ))}
         </div>
@@ -138,9 +150,10 @@ export function AdminPanel({ me, membres }: { me: Membre; membres: MembreRow[] }
 
       <button
         onClick={() => setAjout((a) => ({ open: true, key: a.key + 1 }))}
-        className="fixed right-4.5 bottom-[calc(20px+env(safe-area-inset-bottom,0px))] z-30 h-14 rounded-full bg-brand px-5.5 font-bold text-white shadow-[0_8px_22px_rgba(17,94,245,.35)]"
+        className="fixed right-4 bottom-[calc(20px+env(safe-area-inset-bottom,0px))] z-30 flex h-14 items-center gap-2 rounded-full bg-brand px-5 font-bold text-white shadow-[0_8px_22px_rgba(17,94,245,.35)] lg:hidden"
       >
-        + Ajouter un compte
+        <IconPlus className="size-5" />
+        Ajouter un compte
       </button>
 
       <BottomSheet open={ajout.open} onClose={() => setAjout((a) => ({ ...a, open: false }))} label="Ajouter un compte">

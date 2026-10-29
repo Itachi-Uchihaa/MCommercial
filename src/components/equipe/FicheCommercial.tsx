@@ -136,7 +136,7 @@ export function FicheCommercial({ me, canAdmin, equipe, nom, today, nowTime, dos
         />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2 lg:items-start">
         <section aria-labelledby="prochains">
           <h2 id="prochains" className="section-title">
             Prochains RDV

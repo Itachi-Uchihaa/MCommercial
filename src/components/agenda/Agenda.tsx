@@ -589,7 +589,7 @@ function RdvCard({
             </span>
             <span className="rounded-full bg-canvas px-2 py-0.5 text-[12px] font-semibold text-ink-soft">{RDV_TYPES[r.type]}</span>
             {showCommercial && (
-              <span className="ml-auto rounded-full px-2.5 py-1 text-[12.5px] font-semibold" style={{ background: color.soft, color: color.ink }}>
+              <span className="rounded-full px-2 py-0.5 text-[12px] font-semibold" style={{ background: color.soft, color: color.ink }}>
                 {r.commercial}
               </span>
             )}

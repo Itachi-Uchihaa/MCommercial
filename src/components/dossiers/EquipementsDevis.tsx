@@ -36,39 +36,43 @@ export function EquipementsDevis({ dossierId, valeurs, onMessage, onErreur }: Pr
       <p className="text-[14px] font-semibold">Équipements du devis</p>
       <ul className="mt-1.5 flex flex-col gap-1.5">
         {EQUIPEMENTS.map(({ key, label }) => (
-          <li key={key} className="flex items-center gap-2">
-            <label htmlFor={`${dossierId}-${key}`} className="min-w-0 flex-1 text-[14.5px]">
+          // Écran trop étroit : le nom passe au-dessus des boutons plutôt que d'être coupé
+          <li key={key} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <label htmlFor={`${dossierId}-${key}`} className="min-w-20 flex-1 text-[14.5px] leading-snug">
               {label}
             </label>
-            <button
-              type="button"
-              onClick={() => changer(key, q[key] - 1)}
-              disabled={q[key] <= 0}
-              aria-label={`Un ${label} de moins`}
-              className="grid size-11 flex-none place-items-center rounded-xl border border-line bg-white text-xl font-bold text-brand disabled:text-[#c4c8d2]"
-            >
-              −
-            </button>
-            <input
-              id={`${dossierId}-${key}`}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={MAX}
-              value={q[key]}
-              onChange={(e) => changer(key, e.target.valueAsNumber)}
-              onFocus={(e) => e.target.select()}
-              className="input h-11 min-h-0 w-14 flex-none px-1 py-0 text-center font-bold tabular-nums"
-            />
-            <button
-              type="button"
-              onClick={() => changer(key, q[key] + 1)}
-              disabled={q[key] >= MAX}
-              aria-label={`Un ${label} de plus`}
-              className="grid size-11 flex-none place-items-center rounded-xl border border-line bg-white text-xl font-bold text-brand disabled:text-[#c4c8d2]"
-            >
-              +
-            </button>
+            {/* − / quantité / + restent ensemble, à droite (sous le nom si l'écran est trop étroit) */}
+            <span className="ml-auto flex flex-none items-center gap-2">
+              <button
+                type="button"
+                onClick={() => changer(key, q[key] - 1)}
+                disabled={q[key] <= 0}
+                aria-label={`Un ${label} de moins`}
+                className="grid size-11 flex-none place-items-center rounded-xl border border-line bg-white text-xl font-bold text-brand disabled:text-[#c4c8d2]"
+              >
+                −
+              </button>
+              <input
+                id={`${dossierId}-${key}`}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={MAX}
+                value={q[key]}
+                onChange={(e) => changer(key, e.target.valueAsNumber)}
+                onFocus={(e) => e.target.select()}
+                className="input h-11 min-h-0 w-14 flex-none px-1 py-0 text-center font-bold tabular-nums"
+              />
+              <button
+                type="button"
+                onClick={() => changer(key, q[key] + 1)}
+                disabled={q[key] >= MAX}
+                aria-label={`Un ${label} de plus`}
+                className="grid size-11 flex-none place-items-center rounded-xl border border-line bg-white text-xl font-bold text-brand disabled:text-[#c4c8d2]"
+              >
+                +
+              </button>
+            </span>
           </li>
         ))}
       </ul>

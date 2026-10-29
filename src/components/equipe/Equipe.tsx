@@ -133,7 +133,7 @@ export function Equipe(props: Props) {
         </Tuile>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2 lg:items-start">
         <section aria-labelledby="terrain">
           <h2 id="terrain" className="section-title">
             Aujourd’hui sur le terrain
@@ -208,16 +208,16 @@ export function Equipe(props: Props) {
 
       <section aria-labelledby="commerciaux" className="mt-5">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 id="commerciaux" className="section-title">
+          <h2 id="commerciaux" className="section-title whitespace-nowrap">
             Par commercial
           </h2>
           {canAdmin && (
             <button
               id="objectifs"
               onClick={() => setObjectifs((o) => ({ open: true, key: o.key + 1 }))}
-              className="mb-2 min-h-11 px-1 text-[14px] font-bold text-brand"
+              className="mb-2 min-h-11 px-1 text-[14px] font-bold whitespace-nowrap text-brand"
             >
-              Fixer les objectifs {deMois(today)}
+              Fixer les objectifs<span className="max-sm:hidden"> {deMois(today)}</span>
             </button>
           )}
         </div>
@@ -254,7 +254,7 @@ export function Equipe(props: Props) {
 
       <section aria-labelledby="parcours" className="card mt-5 p-4 lg:p-5">
         <h2 id="parcours" className="text-[17px] font-bold">
-          Du RDV à l’enrôlement TPE
+          Du premier RDV à l’accompagnement
         </h2>
         <div className="mt-3.5 flex flex-col gap-2.5 text-[14px]">
           {s.entonnoir.map((e, i) => {
@@ -336,7 +336,7 @@ export function Equipe(props: Props) {
         </div>
       </section>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
         <Barres
           titre="Pourquoi on perd"
           detail={`${s.perdus} dossier${s.perdus > 1 ? "s" : ""} perdu${s.perdus > 1 ? "s" : ""} · ${s.bornes.label.toLowerCase()}`}

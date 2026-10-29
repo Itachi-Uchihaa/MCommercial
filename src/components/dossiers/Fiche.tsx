@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
-import { ajouterNote, changerEtape, marquerPerdu, rouvrirDossier } from "@/app/actions/dossiers";
+import { useRouter } from "next/navigation";
+import { ajouterNote, changerEtape, marquerPerdu, rouvrirDossier, supprimerDossier } from "@/app/actions/dossiers";
 import { RDV_TYPES, colorOf, fmtHeure, fmtJourCourt, mapsUrl } from "@/lib/agenda";
 import { depuis, fmtMoment, joursEntre, parisDay } from "@/lib/dates";
 import {
@@ -14,6 +15,7 @@ import {
   isDone,
   jourEtape,
   patchEtape,
+  peutSupprimer,
   prochaineEtape,
   telHref,
   villeDe,
@@ -61,6 +63,19 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
   const [perte, setPerte] = useState({ open: false, key: 0 });
   const [cr, setCr] = useState<RendezVous | null>(null);
   const { toast, showToast, showError } = useToast();
+  const router = useRouter();
+  const [suppression, startSuppression] = useTransition();
+  const supprimable = peutSupprimer(me, d);
+
+  function supprimer() {
+    if (!confirm(`Supprimer le dossier « ${d.restaurant} » ? Son journal est supprimé avec lui, ses RDV restent dans l’agenda. Cette action est définitive.`)) return;
+    setSheet((s) => ({ ...s, edit: false }));
+    startSuppression(async () => {
+      const res = await supprimerDossier(d.id);
+      if (!res.ok) return showError(res.error);
+      router.push("/dossiers");
+    });
+  }
 
   const suivante = prochaineEtape(d);
   const futurs = rdvs.filter((r) => !rdvPasse(r, today, nowTime));
@@ -327,6 +342,16 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
               {d.notes && <Info label="Remarque">{d.notes}</Info>}
             </dl>
           </section>
+
+          {supprimable && (
+            <button
+              onClick={supprimer}
+              disabled={suppression}
+              className="min-h-12 w-full rounded-2xl border border-line bg-white font-bold text-danger disabled:opacity-60"
+            >
+              {suppression ? "Suppression…" : "Supprimer ce dossier"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -336,6 +361,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
         dossier={d}
         commerciaux={[...new Set([...equipe, d.commercial])]}
         meNom={me.nom}
+        onSupprimer={supprimable ? supprimer : undefined}
         onClose={() => setSheet((s) => ({ ...s, edit: false }))}
         onSaved={(message) => {
           setSheet((s) => ({ ...s, edit: false }));

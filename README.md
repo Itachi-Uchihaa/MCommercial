@@ -86,6 +86,7 @@ Les évolutions se font par des fichiers datés dans `supabase/`, à exécuter u
 | `2026-10-29_parcours.sql` | Dates des étapes (posées par la base), perte et raison, source, coordonnées, jour de relance ; compte rendu des RDV ; table `journal` avec historique automatique ; table `objectifs` |
 | `2026-10-29_notifications.sql` | Table `push_abonnements` (appareils abonnés aux notifications) |
 | `2026-10-29_preferences_notifications.sql` | Colonne `membres.notifications` (notifications choisies dans Paramètres) |
+| `2026-10-29_suppression_dossiers.sql` | Un commercial ne supprime que ses dossiers ; la direction et les admins suppriment ceux de tout le monde |
 | `2026-10-29_admins_caches.sql` | Comptes admin lisibles seulement par les admins ; ce qu'un admin fait est signé « Équipe mcaisse » dans le journal |
 
 Les heures des RDV sont enregistrées sans fuseau (`time`) : ce sont des heures de Paris, saisies et affichées telles quelles.

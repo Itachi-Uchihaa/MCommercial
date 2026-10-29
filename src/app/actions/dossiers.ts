@@ -5,7 +5,8 @@ import { after } from "next/server";
 import { addDays, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
 import { acteur } from "@/lib/acteur";
-import { RAISONS_PERTE, STEPS, jourEtape } from "@/lib/dossiers";
+import { RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
+import { getCurrentMembre } from "@/lib/auth";
 import { notifierEquipe } from "@/lib/push";
 import { DEVIS_SANS_REPONSE_JOURS } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/server";
@@ -94,6 +95,13 @@ export async function modifierDossier(id: string, input: DossierInfos): Promise<
 export async function supprimerDossier(id: string): Promise<Result> {
   return run("Le dossier n’a pas pu être supprimé.", async () => {
     const supabase = await createClient();
+    const [{ me }, { data: d, error: readError }] = await Promise.all([
+      getCurrentMembre(),
+      supabase.from("dossiers").select("commercial").eq("id", id).maybeSingle(),
+    ]);
+    if (readError) throw readError;
+    if (!d) throw new Refus("Ce dossier a déjà été supprimé. Recharge la page.");
+    if (!me || !peutSupprimer(me, d)) throw new Refus("Tu ne peux supprimer que tes propres dossiers.");
     const { error } = await supabase.from("dossiers").delete().eq("id", id);
     if (error) throw error;
   });

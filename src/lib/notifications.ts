@@ -12,6 +12,8 @@ export type TypeNotif =
   | "groupe_sav"
   | "form"
   | "enrolement_tpe"
+  | "installation"
+  | "accompagnement"
   | "perdu";
 
 export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: TypeNotif; label: string }[] }[] = [
@@ -34,6 +36,8 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
       { key: "groupe_sav", label: "Groupe SAV créé" },
       { key: "form", label: "Form" },
       { key: "enrolement_tpe", label: "TPE enrôlé" },
+      { key: "installation", label: "Installation datée" },
+      { key: "accompagnement", label: "Accompagnement daté" },
       { key: "perdu", label: "Dossier perdu" },
     ],
   },

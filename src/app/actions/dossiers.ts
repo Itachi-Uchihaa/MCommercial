@@ -2,15 +2,15 @@
 
 import { refresh } from "next/cache";
 import { after } from "next/server";
-import { addDays, todayParis } from "@/lib/agenda";
+import { addDays, fmtJour, isIsoDate, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
 import { acteur } from "@/lib/acteur";
-import { EQUIPEMENTS, ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
+import { DATE_PREVUE, EQUIPEMENTS, ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
 import { getCurrentMembre } from "@/lib/auth";
 import { notifierEquipe } from "@/lib/push";
 import { DEVIS_SANS_REPONSE_JOURS } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/server";
-import type { Dossier, DossierInfos, EtapeManuelle, Equipements, RaisonPerte, Source } from "@/lib/types";
+import type { Dossier, DossierInfos, EtapeDatee, EtapeManuelle, Equipements, RaisonPerte, Source } from "@/lib/types";
 
 export type Result = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -87,6 +87,42 @@ export async function modifierDossier(id: string, input: DossierInfos): Promise<
     const supabase = await createClient();
     const { error } = await supabase.from("dossiers").update(infosValides(input)).eq("id", id);
     if (error) throw error;
+  });
+}
+
+/**
+ * Fixe (ou retire, avec null) la date d'installation ou d'accompagnement.
+ * L'étape est faite le jour venu ; la base l'écrit dans le journal.
+ */
+export async function fixerDate(id: string, key: EtapeDatee, jour: string | null): Promise<Result> {
+  return run("La date n’a pas pu être enregistrée.", async () => {
+    if (!(key in DATE_PREVUE)) throw new Refus("Étape inconnue. Recharge la page et réessaie.");
+    if (jour !== null && !isIsoDate(jour)) throw new Refus("Cette date n’est pas valide.");
+    const supabase = await createClient();
+    const { data: d, error } = await supabase
+      .from("dossiers")
+      .update({ [DATE_PREVUE[key]]: jour })
+      .eq("id", id)
+      .select("restaurant, commercial")
+      .single();
+    if (error) throw error;
+
+    if (jour) {
+      after(async () => {
+        const a = await acteur(supabase);
+        const [nom, prevu, fait] = key === "installation" ? ["Installation", "Prévue", "Faite"] : ["Accompagnement", "Prévu", "Fait"];
+        await notifierEquipe(
+          key,
+          {
+            title: `${nom} : ${d.restaurant}`,
+            body: `${jour > todayParis() ? prevu : fait} le ${fmtJour(jour)}. Dossier de ${d.commercial}${d.commercial !== a.nom ? `, daté par ${a.nom}` : ""}.`,
+            url: `/dossiers/${id}`,
+            tag: `etape-${id}-${key}`,
+          },
+          { sauf: a.email },
+        );
+      });
+    }
   });
 }
 

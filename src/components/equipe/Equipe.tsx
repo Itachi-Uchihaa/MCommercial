@@ -532,6 +532,8 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["Groupe SAV créé le", (d) => jour(d.groupe_sav_le)],
     ["Form le", (d) => jour(d.form_le)],
     ["TPE enrôlé le", (d) => jour(d.enrolement_tpe_le)],
+    ["Installation le", (d) => d.date_installation],
+    ["Accompagnement le", (d) => d.date_accompagnement],
     ["Perdu le", (d) => jour(d.perdu_le)],
     ["Raison de la perte", (d) => (d.raison_perte ? RAISONS_PERTE[d.raison_perte] : "")],
     ["Créé le", (d) => jour(d.created_at)],

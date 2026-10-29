@@ -7,10 +7,13 @@ import { ajouterNote, changerEtape, marquerPerdu, rouvrirDossier, supprimerDossi
 import { RDV_TYPES, colorOf, fmtHeure, fmtJourCourt, mapsUrl } from "@/lib/agenda";
 import { depuis, fmtMoment, joursEntre, parisDay } from "@/lib/dates";
 import {
+  DATE_PREVUE,
   EQUIPEMENTS,
   RAISONS_PERTE,
   SOURCES,
   STEPS,
+  datePrevue,
+  estDatee,
   fmtDate,
   fmtSiret,
   isDone,
@@ -30,6 +33,7 @@ import { CompteRenduSheet } from "../CompteRenduSheet";
 import { IconCalendar, IconCheck, IconChevronRight, IconClock, IconMail, IconPhone, IconRoute } from "../icons";
 import { Toast, useToast } from "../Toast";
 import { DossierSheet } from "./DossierSheet";
+import { DateEtape } from "./DateEtape";
 import { EquipementsDevis } from "./EquipementsDevis";
 import { MenuSav, type FichierMenu } from "./MenuSav";
 
@@ -212,6 +216,39 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     />
                   );
                 }
+                // Installation, accompagnement : une date à choisir ; à venir = prévue, faite le jour venu
+                if (estDatee(s.key)) {
+                  const choisie = d[DATE_PREVUE[s.key]];
+                  const prevue = datePrevue(d, s.key);
+                  return (
+                    <Etape
+                      key={s.key}
+                      fait={fait}
+                      courante={courante}
+                      dernier={i === STEPS.length - 1}
+                      titre={courante ? `${s.long} · étape en cours` : s.long}
+                      detail={
+                        fait && jour
+                          ? fmtJourCourt(jour)
+                          : prevue
+                            ? `${s.key === "installation" ? "Prévue" : "Prévu"} le ${fmtJourCourt(prevue)}`
+                            : undefined
+                      }
+                      extra={
+                        !d.perdu_le && (fait || courante || choisie) ? (
+                          <DateEtape
+                            key={choisie ?? "aucune"}
+                            dossierId={d.id}
+                            etape={s.key}
+                            valeur={choisie}
+                            onMessage={showToast}
+                            onErreur={showError}
+                          />
+                        ) : undefined
+                      }
+                    />
+                  );
+                }
                 return (
                   <Etape
                     key={s.key}
@@ -262,7 +299,8 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 Planifier un RDV
               </Link>
             )}
-            {!d.perdu_le && suivante && suivante.key !== "rdv" && (
+            {/* Étapes datées : la date se choisit directement sous l'étape, pas de gros bouton */}
+            {!d.perdu_le && suivante && suivante.key !== "rdv" && !estDatee(suivante.key) && (
               <button
                 onClick={() => etape(suivante.key as EtapeManuelle, true)}
                 disabled={pending}

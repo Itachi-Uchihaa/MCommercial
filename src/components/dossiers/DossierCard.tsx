@@ -39,7 +39,7 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
       </span>
       {meta && <span className="mt-0.5 block text-[13px] text-muted">{meta}</span>}
 
-      <span aria-hidden className="mt-3 grid grid-cols-6 gap-1">
+      <span aria-hidden className="mt-3 grid gap-1" style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}>
         {STEPS.map((s, i) => (
           <span key={s.key} className={`h-1.5 rounded-full ${i <= n ? (d.perdu_le ? "bg-[#a9afbd]" : "bg-brand") : "bg-line"}`} />
         ))}

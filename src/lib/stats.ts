@@ -127,4 +127,6 @@ const ENTONNOIR: Record<StepKey, string> = {
   groupe_sav: "Groupe SAV",
   form: "Form",
   enrolement_tpe: "TPE enrôlés",
+  installation: "Installés",
+  accompagnement: "Accompagnés",
 };

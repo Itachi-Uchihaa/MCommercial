@@ -1,11 +1,11 @@
 import { fmtHeure, fmtJourCourt } from "@/lib/agenda";
 import { depuis, joursEntre } from "@/lib/dates";
-import { derniereEtape, jourEtape, prochaineEtape } from "@/lib/dossiers";
+import { DATE_PREVUE, derniereEtape, estDatee, isDone, jourEtape, prochaineEtape } from "@/lib/dossiers";
 import type { Dossier, RendezVous } from "@/lib/types";
 
 /** Un devis sans réponse depuis ce nombre de jours est à relancer. */
 export const DEVIS_SANS_REPONSE_JOURS = 7;
-/** Un dossier signé qui n'avance plus (groupe SAV, Form, TPE) depuis ce nombre de jours est bloqué. */
+/** Un dossier signé qui n'avance plus (groupe SAV, Form, TPE, installation, accompagnement) depuis ce nombre de jours est bloqué. */
 export const ATTENTE_ETAPE_JOURS = 10;
 /** Au-delà, un RDV sans compte rendu n'est plus réclamé. */
 const COMPTE_RENDU_JOURS_MAX = 30;
@@ -47,8 +47,8 @@ export function relancesDe({
   const out: Relance[] = [];
 
   for (const d of dossiers) {
-    // Perdu, ou TPE enrôlé (dernière étape) : plus rien à suivre
-    if (d.perdu_le || d.enrolement_tpe) continue;
+    // Perdu, ou accompagnement fait (dernière étape) : plus rien à suivre
+    if (d.perdu_le || isDone(d, "accompagnement")) continue;
     const base = { dossierId: d.id, restaurant: d.restaurant, commercial: d.commercial };
     const devisLe = jourEtape(d, "devis_fait");
 
@@ -68,11 +68,13 @@ export function relancesDe({
       }
     }
 
-    // Signé, mais la suite (groupe SAV, Form, TPE) n'avance plus
+    // Signé, mais la suite (groupe SAV, Form, TPE, installation, accompagnement) n'avance plus.
+    // Une installation ou un accompagnement déjà daté (à venir) n'est pas bloqué : c'est prévu.
     if (blocages && d.signature) {
       const derniere = derniereEtape(d);
       const suite = prochaineEtape(d);
-      if (derniere?.jour && suite) {
+      const prevue = suite && estDatee(suite.key) && !!d[DATE_PREVUE[suite.key]];
+      if (derniere?.jour && suite && !prevue) {
         const n = joursEntre(derniere.jour, today);
         if (n >= ATTENTE_ETAPE_JOURS) {
           out.push({
@@ -80,7 +82,7 @@ export function relancesDe({
             cle: `suite-${d.id}`,
             type: "apres_signature",
             jours: n,
-            motif: `${derniere.long} ${depuis(n)}, « ${suite.long} » pas fait`,
+            motif: `${derniere.long} ${depuis(n)}, « ${suite.long} » ${estDatee(suite.key) ? "à dater" : "pas fait"}`,
           });
         }
       }

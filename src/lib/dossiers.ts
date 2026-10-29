@@ -1,6 +1,6 @@
 import { todayParis } from "@/lib/agenda";
 import { parisDay } from "@/lib/dates";
-import type { Dossier, EtapeManuelle, Equipements, RaisonPerte, Source, StepKey } from "@/lib/types";
+import type { Dossier, EtapeDatee, EtapeManuelle, Equipements, RaisonPerte, Source, StepKey } from "@/lib/types";
 
 /** Les étapes du parcours, dans l'ordre. « RDV » se coche toute seule, les autres à la main. */
 export const STEPS: { key: StepKey; court: string; long: string }[] = [
@@ -10,7 +10,23 @@ export const STEPS: { key: StepKey; court: string; long: string }[] = [
   { key: "groupe_sav", court: "SAV", long: "Groupe SAV créé" },
   { key: "form", court: "Form", long: "Form" },
   { key: "enrolement_tpe", court: "TPE", long: "TPE enrôlé" },
+  { key: "installation", court: "Install.", long: "Installation" },
+  { key: "accompagnement", court: "Accomp.", long: "Accompagnement" },
 ];
+
+/** Étapes datées et leur colonne : faites quand leur jour est arrivé. */
+export const DATE_PREVUE: Record<EtapeDatee, "date_installation" | "date_accompagnement"> = {
+  installation: "date_installation",
+  accompagnement: "date_accompagnement",
+};
+
+export const estDatee = (key: StepKey): key is EtapeDatee => key in DATE_PREVUE;
+
+/** Date choisie pour une étape datée, si elle est encore à venir (« prévue le … »). */
+export function datePrevue(d: Dossier, key: EtapeDatee) {
+  const jour = d[DATE_PREVUE[key]];
+  return jour && jour > todayParis() ? jour : null;
+}
 
 export const ETAPES_MANUELLES: EtapeManuelle[] = ["devis_fait", "signature", "groupe_sav", "form", "enrolement_tpe"];
 
@@ -22,9 +38,14 @@ const DATE_ETAPE = {
   enrolement_tpe: "enrolement_tpe_le",
 } as const;
 
-/** « RDV » : le premier RDV du dossier a eu lieu (son jour est arrivé). */
+/** « RDV » : le premier RDV du dossier a eu lieu. Étapes datées : leur jour est arrivé. */
 export function isDone(d: Dossier, key: StepKey) {
-  return key === "rdv" ? !!d.rdv_le && d.rdv_le <= todayParis() : d[key];
+  if (key === "rdv") return !!d.rdv_le && d.rdv_le <= todayParis();
+  if (estDatee(key)) {
+    const jour = d[DATE_PREVUE[key]];
+    return !!jour && jour <= todayParis();
+  }
+  return d[key];
 }
 
 /** Modification d'une étape, telle que la base l'enregistre (affichage immédiat avant la réponse). */
@@ -35,6 +56,7 @@ export function patchEtape(key: EtapeManuelle, fait: boolean): Partial<Dossier> 
 /** Jour (AAAA-MM-JJ, heure de Paris) où l'étape a été franchie. */
 export function jourEtape(d: Dossier, key: StepKey): string | null {
   if (key === "rdv") return isDone(d, "rdv") ? d.rdv_le : null;
+  if (estDatee(key)) return isDone(d, key) ? d[DATE_PREVUE[key]] : null;
   const ts = d[DATE_ETAPE[key]];
   return ts ? parisDay(ts) : null;
 }
@@ -66,6 +88,8 @@ export const FILTRES_ETAPE: { key: Etape | "tous"; label: string }[] = [
   { key: "groupe_sav", label: "SAV" },
   { key: "form", label: "Form" },
   { key: "enrolement_tpe", label: "TPE" },
+  { key: "installation", label: "Installés" },
+  { key: "accompagnement", label: "Accompagnés" },
   { key: "perdu", label: "Perdus" },
 ];
 

@@ -40,8 +40,10 @@ export type Dossier = {
   groupe_sav_le: string | null;
   form_le: string | null;
   enrolement_tpe_le: string | null;
-  /** Ancienne étape « Installé », plus affichée. */
+  /** Jour d'installation (AAAA-MM-JJ), choisi par le commercial : à venir = prévue. */
   date_installation: string | null;
+  /** Jour d'accompagnement (AAAA-MM-JJ), choisi par le commercial : à venir = prévu. */
+  date_accompagnement: string | null;
   /** Jour du premier RDV du dossier (tenu à jour par la base). */
   rdv_le: string | null;
   /** Équipements du devis : quantités (0 à 99). */
@@ -117,10 +119,21 @@ export type RendezVousInput = Omit<
 export type Equipements = Pick<Dossier, "devis_ipad" | "devis_imprimante" | "devis_tiroir_caisse" | "devis_tpe" | "devis_borne">;
 
 /** Étapes affichées sur chaque carte, dans l'ordre du parcours commercial. */
-export type StepKey = "rdv" | "devis_fait" | "signature" | "groupe_sav" | "form" | "enrolement_tpe";
+export type StepKey =
+  | "rdv"
+  | "devis_fait"
+  | "signature"
+  | "groupe_sav"
+  | "form"
+  | "enrolement_tpe"
+  | "installation"
+  | "accompagnement";
 
-/** Étapes cochées à la main (« RDV » se coche toute seule quand le premier RDV a eu lieu). */
-export type EtapeManuelle = Exclude<StepKey, "rdv">;
+/** Étapes datées : le commercial choisit la date, l'étape est faite le jour venu. */
+export type EtapeDatee = "installation" | "accompagnement";
+
+/** Étapes cochées à la main (« RDV » se coche toute seule, les étapes datées se font le jour venu). */
+export type EtapeManuelle = Exclude<StepKey, "rdv" | EtapeDatee>;
 
 /** Photo ou PDF du menu d'un restaurant (étape « Groupe SAV créé »). */
 export type MenuFichier = {

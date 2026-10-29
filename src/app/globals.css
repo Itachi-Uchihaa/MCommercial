@@ -3,15 +3,22 @@
 @theme {
   --color-brand: #115ef5;
   --color-brand-soft: #e8f0ff;
+  --color-brand-ink: #0b3fa8;
   --color-ink: #0f1733;
-  --color-muted: #6b7280;
+  --color-ink-soft: #3d4455;
+  /* Gris des textes secondaires : assez foncé pour se lire sur le fond gris clair (4,5:1) */
+  --color-muted: #596173;
   --color-line: #e3e6ee;
   --color-canvas: #f3f4f8;
   --color-ok: #0f9d58;
   --color-ok-soft: #e3f5ec;
   --color-ok-line: #b9e4cc;
   --color-ok-ink: #0b6b3c;
-  --color-danger: #d93025;
+  /* À relancer, en attente */
+  --color-warn: #8f4500;
+  --color-warn-soft: #fff1e3;
+  --color-warn-line: #f2c894;
+  --color-danger: #c5221f;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
 }
 
@@ -21,11 +28,29 @@ body {
   color: var(--color-ink);
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Contour visible au clavier (sans gêner le doigt) */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Section : petit titre en capitales au-dessus d'une carte */
+.section-title {
+  @apply mx-0.5 mb-2 text-[13px] font-bold tracking-wider text-muted uppercase;
+}
+.card {
+  @apply rounded-[18px] border border-line bg-white;
 }
 
 /* Champs de formulaire : 16px minimum pour éviter le zoom automatique sur iPhone */
 .input {
-  @apply w-full min-h-12 rounded-xl border border-line bg-white px-3.5 py-3 text-base outline-none focus:border-brand;
+  @apply w-full min-h-12 rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none focus:border-brand;
+}
+.input::placeholder {
+  color: #6b7280;
 }
 
 .safe-top {

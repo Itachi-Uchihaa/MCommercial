@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminPanel, type MembreRow } from "@/components/admin/AdminPanel";
 import { AuthCard } from "@/components/AuthCard";
-import { getCurrentMembre } from "@/lib/auth";
+import { getCurrentMembre, isAdminEmail } from "@/lib/auth";
 import { createAdminClient, hasAdminKey } from "@/lib/supabase/admin";
 import type { Membre } from "@/lib/types";
 
@@ -18,7 +18,7 @@ export default function AdminPage() {
 async function Contenu() {
   const { email, me } = await getCurrentMembre();
   if (!email) redirect("/login");
-  if (!me || me.role !== "admin") redirect("/");
+  if (!me || !isAdminEmail(me.email)) redirect("/");
 
   if (!hasAdminKey()) {
     return (

@@ -9,6 +9,8 @@ import { Toast, useToast } from "../Toast";
 export type MembreRow = Membre & { hasAccount: boolean; lastSignIn: string | null; dossiers: number };
 
 const ROLE_LABEL: Record<Role, string> = { commercial: "Commercial", directeur: "Directeur", admin: "Admin" };
+/** Rôles attribuables ici : l'accès Administration passe par ADMIN_EMAILS, pas par le rôle. */
+const ROLES_CHOIX: Role[] = ["commercial", "directeur"];
 const ROLE_STYLE: Record<Role, string> = {
   commercial: "bg-brand-soft text-brand",
   directeur: "bg-[#fff4e0] text-[#9a5b00]",
@@ -191,8 +193,8 @@ const label = "mb-1.5 block text-[13.5px] text-muted";
 
 function RolePicker({ value, onChange }: { value: Role; onChange: (r: Role) => void }) {
   return (
-    <div className="mb-3 grid grid-cols-3 gap-2">
-      {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
+    <div className="mb-3 grid grid-cols-2 gap-2">
+      {ROLES_CHOIX.map((r) => (
         <button
           type="button"
           key={r}

@@ -9,7 +9,8 @@ export type ActionResult =
   | { ok: true; message: string; accountCreated?: boolean }
   | { ok: false; error: string };
 
-const ROLES: Role[] = ["commercial", "directeur", "admin"];
+// Le rôle « admin » ne donne plus de droit (l'accès passe par ADMIN_EMAILS) : il n'est plus attribuable.
+const ROLES: Role[] = ["commercial", "directeur"];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function run(
@@ -36,15 +37,6 @@ async function findAuthUser(email: string) {
     if (data.users.length < 200) break;
   }
   return null;
-}
-
-async function adminCount() {
-  const { count, error } = await createAdminClient()
-    .from("membres")
-    .select("id", { count: "exact", head: true })
-    .eq("role", "admin");
-  if (error) throw new Error(error.message);
-  return count ?? 0;
 }
 
 /** Crée le compte de connexion (s'il n'existe pas) et l'ajoute à l'équipe. */
@@ -93,11 +85,8 @@ export async function addMembre(input: {
 
 export async function updateRole(membreId: string, role: Role): Promise<ActionResult> {
   return run(async () => {
-    const me = await requireAdmin();
+    await requireAdmin();
     if (!ROLES.includes(role)) throw new Error("Rôle invalide.");
-    if (membreId === me.id && role !== "admin" && (await adminCount()) <= 1) {
-      throw new Error("Tu es le seul admin : nomme un autre admin avant de changer ton rôle.");
-    }
     const { error } = await createAdminClient().from("membres").update({ role }).eq("id", membreId);
     if (error) throw new Error(error.message);
     return "Rôle mis à jour.";

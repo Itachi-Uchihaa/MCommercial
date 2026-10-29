@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/config";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+// /api/cron : appelé par Vercel Cron, protégé par CRON_SECRET dans la route
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/cron/"];
 
 /**
  * Rafraîchit la session Supabase à chaque navigation et protège les pages :

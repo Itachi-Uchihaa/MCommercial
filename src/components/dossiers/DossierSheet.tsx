@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { modifierDossier, supprimerDossier } from "@/app/actions/dossiers";
+import { modifierDossier } from "@/app/actions/dossiers";
 import type { Dossier, DossierInfos } from "@/lib/types";
 import { BottomSheet, useUnsavedGuard } from "../BottomSheet";
 import { DossierFields } from "./DossierFields";
@@ -16,6 +15,8 @@ type Props = {
   meNom: string;
   onClose: () => void;
   onSaved: (message: string) => void;
+  /** Absent si la personne n'a pas le droit de supprimer ce dossier. */
+  onSupprimer?: () => void;
 };
 
 /** Modifier les infos d'un dossier, ou le supprimer. Les étapes se cochent dans la fiche. */
@@ -27,8 +28,7 @@ export function DossierSheet(props: Props) {
   );
 }
 
-function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
-  const router = useRouter();
+function Form({ dossier: d, commerciaux, meNom, onSaved, onSupprimer }: Props) {
   const [infos, setInfos] = useState<DossierInfos>({
     restaurant: d.restaurant,
     commercial: d.commercial,
@@ -43,7 +43,6 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
   });
   const [error, setError] = useState<string | null>(null);
   const [nomInvalide, setNomInvalide] = useState(false);
-  const [suppression, setSuppression] = useState(false);
   const [pending, start] = useTransition();
   const nomRef = useRef<HTMLInputElement>(null);
   const [initiales] = useState(() => JSON.stringify(infos));
@@ -57,21 +56,10 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
       return nomRef.current?.focus();
     }
     setError(null);
-    setSuppression(false);
     start(async () => {
       const res = await modifierDossier(d.id, infos);
       if (res.ok) onSaved("Dossier mis à jour");
       else setError(res.error);
-    });
-  }
-
-  function remove() {
-    if (!confirm(`Supprimer le dossier « ${d.restaurant} » ? Son journal est supprimé avec lui, ses RDV restent dans l’agenda. Cette action est définitive.`)) return;
-    setSuppression(true);
-    start(async () => {
-      const res = await supprimerDossier(d.id);
-      if (!res.ok) return setError(res.error);
-      router.push("/dossiers");
     });
   }
 
@@ -107,11 +95,13 @@ function Form({ dossier: d, commerciaux, meNom, onSaved }: Props) {
       )}
 
       <button disabled={pending} className="w-full rounded-2xl bg-brand py-4 font-bold text-white disabled:opacity-60">
-        {pending && !suppression ? "Enregistrement…" : "Enregistrer"}
+        {pending ? "Enregistrement…" : "Enregistrer"}
       </button>
-      <button type="button" disabled={pending} onClick={remove} className="mt-2 w-full rounded-2xl py-4 font-bold text-danger disabled:opacity-60">
-        {pending && suppression ? "Suppression…" : "Supprimer ce dossier"}
-      </button>
+      {onSupprimer && (
+        <button type="button" disabled={pending} onClick={onSupprimer} className="mt-2 w-full rounded-2xl py-4 font-bold text-danger disabled:opacity-60">
+          Supprimer ce dossier
+        </button>
+      )}
     </form>
   );
 }

@@ -123,3 +123,7 @@ export const maskSiret = (raw: string) => {
 
 /** Lien d'appel : garde les chiffres et le « + ». */
 export const telHref = (tel: string) => `tel:${tel.replace(/[^\d+]/g, "")}`;
+
+/** Un commercial ne supprime que ses dossiers ; la direction et les admins suppriment ceux de tout le monde. */
+export const peutSupprimer = (me: { role: string; nom: string }, d: { commercial: string }) =>
+  me.role !== "commercial" || d.commercial === me.nom;

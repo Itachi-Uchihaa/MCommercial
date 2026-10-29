@@ -176,7 +176,8 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
             key={t}
             onClick={() => setType(t)}
             aria-pressed={type === t}
-            className={`rounded-xl border px-1 py-3 text-[15px] ${
+            // Un peu plus petit sur les petits écrans : « Découverte » en gras tient dans la case
+            className={`min-w-0 rounded-xl border px-0.5 py-3 text-[14px] min-[375px]:text-[15px] ${
               type === t ? "border-brand bg-brand-soft font-semibold text-brand" : "border-line"
             }`}
           >
@@ -199,12 +200,13 @@ function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDel
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <label className="mb-3 block">
+      {/* min-w-0 : chaque case peut rétrécir, les deux heures ne débordent pas l'une sur l'autre */}
+      <div className="grid grid-cols-2 gap-3.5">
+        <label className="mb-3 block min-w-0">
           <span className={label}>Début</span>
           <input className="input" type="time" value={debut} onChange={(e) => changeDebut(e.target.value)} />
         </label>
-        <label className="mb-3 block">
+        <label className="mb-3 block min-w-0">
           <span className={label}>Fin</span>
           <input
             className="input"

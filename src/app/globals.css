@@ -64,6 +64,23 @@
   .input::placeholder {
     color: #6b7280;
   }
+  /*
+   * Date et heure : sur iPhone, Safari leur impose une largeur minimale et centre la valeur,
+   * le champ déborde alors de la fenêtre et deux champs côte à côte se touchent.
+   * Sans l'apparence native, ils prennent la largeur prévue, comme les autres champs.
+   */
+  .input:is([type="date"], [type="time"]) {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .input:is([type="date"], [type="time"])::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.5em;
+  }
+
   /* Champ en erreur : reste rouge, même sélectionné */
   .input[aria-invalid="true"] {
     @apply border-danger focus:border-danger focus:ring-danger/15;

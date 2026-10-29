@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { updatePrenom } from "@/app/parametres/actions";
+import { preferencesDe } from "@/lib/notifications";
 import type { Membre } from "@/lib/types";
 import { NotificationsReglage } from "./NotificationsReglage";
 import { Toast, useToast } from "./Toast";
@@ -69,7 +70,7 @@ export function Parametres({ me }: { me: Membre }) {
           </button>
         </form>
 
-        <NotificationsReglage />
+        <NotificationsReglage preferences={preferencesDe(me)} />
       </main>
 
       <Toast message={toast} />

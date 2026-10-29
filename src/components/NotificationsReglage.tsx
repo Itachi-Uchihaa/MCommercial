@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
-import { notificationTest, sAbonner, seDesabonner } from "@/app/actions/notifications";
+import { enregistrerPreferences, notificationTest, sAbonner, seDesabonner } from "@/app/actions/notifications";
+import { GROUPES_NOTIF, type TypeNotif } from "@/lib/notifications";
 
 type Support = "chargement" | "ok" | "ios" | "non";
 
@@ -36,12 +37,26 @@ async function registration() {
   );
 }
 
-/** Section « Notifications » des Paramètres : abonner ou désabonner cet appareil. */
-export function NotificationsReglage() {
+/** Section « Notifications » des Paramètres : abonner cet appareil, choisir ce qui déclenche une notification. */
+export function NotificationsReglage({ preferences }: { preferences: TypeNotif[] }) {
   const support = useSyncExternalStore(rien, detecter, () => "chargement" as const);
   const [actif, setActif] = useState<boolean | null>(null);
   const [message, setMessage] = useState<{ texte: string; erreur: boolean } | null>(null);
   const [pending, start] = useTransition();
+  const [choix, setChoix] = useState(() => new Set(preferences));
+  const [choixMessage, setChoixMessage] = useState<{ texte: string; erreur: boolean } | null>(null);
+  const [, startChoix] = useTransition();
+
+  function basculer(t: TypeNotif) {
+    const next = new Set(choix);
+    if (next.has(t)) next.delete(t);
+    else next.add(t);
+    setChoix(next);
+    startChoix(async () => {
+      const res = await enregistrerPreferences([...next]);
+      setChoixMessage(res.ok ? { texte: "Choix enregistré.", erreur: false } : { texte: res.error, erreur: true });
+    });
+  }
 
   useEffect(() => {
     if (support !== "ok") return;
@@ -116,10 +131,8 @@ export function NotificationsReglage() {
         Notifications
       </h2>
       <div className="card p-3.5">
-        <p className="text-[14.5px]">
-          Sur cet appareil : un RDV ajouté pour toi par un collègue, et chaque matin ta journée (RDV et relances). La direction reçoit aussi
-          les signatures.
-        </p>
+        <h3 className="text-[15px] font-bold">Sur cet appareil</h3>
+        <p className="mt-0.5 text-[14px] text-muted">Active-les sur chaque téléphone ou ordinateur où tu veux les recevoir.</p>
 
         {support === "ios" && (
           <p className="mt-3 rounded-xl bg-brand-soft px-3.5 py-3 text-[14px] text-brand-ink">
@@ -160,6 +173,28 @@ export function NotificationsReglage() {
 
         <p aria-live="polite" className={`mt-2.5 text-[13.5px] ${message?.erreur ? "text-danger" : "text-ok-ink"}`}>
           {message?.texte}
+        </p>
+      </div>
+
+      <div className="card mt-3 p-3.5">
+        <h3 className="text-[15px] font-bold">Me prévenir pour</h3>
+        <p className="mt-0.5 text-[14px] text-muted">Tes choix valent pour tous tes appareils.</p>
+        {GROUPES_NOTIF.map((g) => (
+          <fieldset key={g.titre} className="mt-4">
+            <legend className="text-[13px] font-bold tracking-wider text-muted uppercase">{g.titre}</legend>
+            {g.detail && <p className="text-[13px] text-muted">{g.detail}</p>}
+            <div className="mt-2 overflow-hidden rounded-xl border border-line">
+              {g.types.map((t, i) => (
+                <label key={t.key} className={`flex min-h-12 cursor-pointer items-center gap-3 px-3.5 py-2 text-[15px] ${i ? "border-t border-line" : ""}`}>
+                  <input type="checkbox" className="size-5 flex-none accent-brand" checked={choix.has(t.key)} onChange={() => basculer(t.key)} />
+                  {t.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))}
+        <p aria-live="polite" className={`mt-2.5 min-h-5 text-[13.5px] ${choixMessage?.erreur ? "text-danger" : "text-ok-ink"}`}>
+          {choixMessage?.texte}
         </p>
       </div>
     </section>

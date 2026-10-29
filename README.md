@@ -12,10 +12,10 @@ Onglets en bas sur téléphone, menu latéral sur ordinateur. Tout se met à jou
 - **Dossiers** : pipeline par étape (prospects, devis, acceptés, signés, TPE, installés, perdus), recherche, filtre par commercial. Chaque carte montre l'avancement, la dernière étape datée et le prochain RDV.
 - **Fiche client** : parcours daté (la date de chaque étape est posée par la base), bouton « étape suivante », « Classer perdu » avec la raison, RDV avec compte rendu, journal (notes de l'équipe et historique automatique), infos.
 - **Nouveau dossier** : recherche par nom ou SIRET dans l'annuaire officiel des entreprises (nom, adresse, gérant, activité remplis tout seuls), alerte si le restaurant est déjà suivi par un collègue, source du contact.
-- **Agenda** : semaine par semaine, filtre par commercial, alerte si deux RDV se chevauchent, compte rendu après chaque RDV (résultat, suite, jour de rappel).
+- **Agenda** : vue Semaine, ou vue Liste (tous les RDV à venir ou des 60 derniers jours, avec recherche) ; filtre par commercial, alerte si deux RDV se chevauchent, pas de RDV planifié dans le passé, compte rendu après chaque RDV (résultat, suite, jour de rappel).
 - **Relances automatiques** : devis sans réponse depuis 7 jours, rappel posé dans un compte rendu, RDV sans compte rendu ; côté directeur, dossiers signés qui n'avancent plus depuis 10 jours.
 - **Équipe** (directeur) : signés / objectif, taux de signature, délai moyen, parcours du RDV à l'installation, qui est sur le terrain aujourd'hui, à débloquer, chiffres par commercial, semaine de l'équipe, pourquoi on perd, d'où viennent les signatures, export CSV. Objectifs mensuels fixés par les administrateurs.
-- **Notifications push** (gratuites, sans App Store), activées par chacun dans **Paramètres** : RDV ajouté ou déplacé par un collègue, récap du matin (RDV du jour et relances ; pour la direction, RDV de l'équipe et dossiers à débloquer), signature d'un dossier (direction). Sur iPhone, l'app doit d'abord être ajoutée à l'écran d'accueil (iOS 16.4 ou plus).
+- **Notifications push** (gratuites, sans App Store), activées par chacun dans **Paramètres**, qui choisit aussi ce qui le prévient (`src/lib/notifications.ts`) : RDV ajouté ou déplacé pour lui, récap du matin, et l'activité de l'équipe (nouveau dossier, nouveau RDV, compte rendu, chaque étape, dossier perdu), jamais pour ses propres actions. Par défaut : tout pour la direction, RDV et récap pour un commercial. Sur iPhone, l'app doit d'abord être ajoutée à l'écran d'accueil (iOS 16.4 ou plus).
 - Connexion par email et mot de passe, réservée aux membres de l'équipe ; installable sur l'écran d'accueil (iPhone et Android).
 - Espace **Administration** (réservé aux emails de `ADMIN_EMAILS`) : créer, supprimer des comptes, changer les rôles, générer un nouveau mot de passe. **Paramètres** : chacun change son prénom.
 
@@ -84,6 +84,7 @@ Les évolutions se font par des fichiers datés dans `supabase/`, à exécuter u
 | `2026-10-29_agenda.sql` | Table `rendez_vous` (agenda) et suppression de `dossiers.date_rdv` |
 | `2026-10-29_parcours.sql` | Dates des étapes (posées par la base), perte et raison, source, coordonnées, jour de relance ; compte rendu des RDV ; table `journal` avec historique automatique ; table `objectifs` |
 | `2026-10-29_notifications.sql` | Table `push_abonnements` (appareils abonnés aux notifications) |
+| `2026-10-29_preferences_notifications.sql` | Colonne `membres.notifications` (notifications choisies dans Paramètres) |
 
 Les heures des RDV sont enregistrées sans fuseau (`time`) : ce sont des heures de Paris, saisies et affichées telles quelles.
 

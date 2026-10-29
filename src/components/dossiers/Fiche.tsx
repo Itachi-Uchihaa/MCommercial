@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
 import { ajouterNote, changerEtape, marquerPerdu, rouvrirDossier } from "@/app/actions/dossiers";
-import { RDV_TYPES, colorOf, fmtHeure, fmtJourCourt, mapsUrl, mondayOf } from "@/lib/agenda";
+import { RDV_TYPES, colorOf, fmtHeure, fmtJourCourt, mapsUrl } from "@/lib/agenda";
 import { depuis, fmtMoment, joursEntre, parisDay } from "@/lib/dates";
 import {
   RAISONS_PERTE,
@@ -24,7 +24,7 @@ import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { BottomSheet } from "../BottomSheet";
 import { CompteRenduSheet } from "../CompteRenduSheet";
-import { IconCalendar, IconCheck, IconClock, IconMail, IconPhone, IconRoute } from "../icons";
+import { IconCalendar, IconCheck, IconChevronRight, IconClock, IconMail, IconPhone, IconRoute } from "../icons";
 import { Toast, useToast } from "../Toast";
 import { DossierSheet } from "./DossierSheet";
 
@@ -228,13 +228,17 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 const passe = rdvPasse(r, today, nowTime);
                 return (
                   <li key={r.id} className={`rounded-xl p-3 ${passe ? "bg-[#f7f8fa]" : "bg-[#f5f8ff]"}`}>
-                    <Link href={`/agenda?semaine=${mondayOf(r.jour)}`} className="block">
-                      <span className={`block font-bold ${passe ? "text-ink-soft" : ""}`}>
-                        {fmtJourCourt(r.jour)} · {fmtHeure(r.debut)} – {fmtHeure(r.fin)}
+                    {/* Ouvre le RDV dans l'agenda, prêt à être modifié */}
+                    <Link href={`/agenda?rdv=${r.id}`} className="flex items-center gap-2">
+                      <span className="min-w-0 flex-1">
+                        <span className={`block font-bold ${passe ? "text-ink-soft" : ""}`}>
+                          {fmtJourCourt(r.jour)} · {fmtHeure(r.debut)} – {fmtHeure(r.fin)}
+                        </span>
+                        <span className="block text-[13px] text-muted">
+                          {RDV_TYPES[r.type]} · {r.commercial}
+                        </span>
                       </span>
-                      <span className="block text-[13px] text-muted">
-                        {RDV_TYPES[r.type]} · {r.commercial}
-                      </span>
+                      <IconChevronRight className="size-5 text-[#8e95a5]" />
                     </Link>
                     {passe &&
                       (r.compte_rendu_le ? (

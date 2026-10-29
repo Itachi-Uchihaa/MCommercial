@@ -1,7 +1,8 @@
 "use server";
 
-import { RDV_TYPES, fmtHeure, fmtJourCourt, mondayOf } from "@/lib/agenda";
-import { emailsDe, notifier, pushDisponible } from "@/lib/push";
+import { RDV_TYPES, fmtHeure, fmtJourCourt } from "@/lib/agenda";
+import { estTypeNotif } from "@/lib/notifications";
+import { notifier, notifierEquipe, pushDisponible } from "@/lib/push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Membre, RendezVous } from "@/lib/types";
@@ -76,22 +77,58 @@ export async function notificationTest(): Promise<Result> {
 }
 
 /**
- * Prévient le commercial d'un RDV qu'un collègue vient de lui ajouter ou de lui déplacer.
- * Appelé par l'agenda après l'enregistrement ; ne fait rien si c'est son propre RDV.
+ * Après l'enregistrement d'un RDV dans l'agenda :
+ * prévient son commercial si un collègue le lui a posé ou déplacé (« rdv_pour_moi »),
+ * et, pour un nouveau RDV, ceux qui suivent les RDV de l'équipe (« rdv_equipe »).
  */
 export async function notifierRdv(rdvId: string, changement: "nouveau" | "modifie"): Promise<void> {
   try {
     const session = await moi();
     if (!session) return;
     const { data: r } = await session.supabase.from("rendez_vous").select("*").eq("id", rdvId).maybeSingle<RendezVous>();
-    if (!r || r.commercial === session.me.nom) return;
-    await notifier(await emailsDe([r.commercial]), {
-      title: changement === "nouveau" ? "Nouveau RDV" : "RDV modifié",
-      body: `${fmtJourCourt(r.jour)} à ${fmtHeure(r.debut)} · ${RDV_TYPES[r.type]} chez ${r.restaurant} (par ${session.me.nom})`,
-      url: `/agenda?semaine=${mondayOf(r.jour)}`,
-      tag: `rdv-${r.id}`,
-    });
+    if (!r) return;
+    const quand = `${fmtJourCourt(r.jour)} à ${fmtHeure(r.debut)}`;
+
+    if (r.commercial !== session.me.nom) {
+      await notifierEquipe(
+        "rdv_pour_moi",
+        {
+          title: changement === "nouveau" ? "Nouveau RDV pour toi" : "Ton RDV a été modifié",
+          body: `${quand} · ${RDV_TYPES[r.type]} chez ${r.restaurant} (par ${session.me.nom})`,
+          url: `/agenda?rdv=${r.id}`,
+          tag: `rdv-${r.id}`,
+        },
+        { seulement: [r.commercial], sauf: session.email },
+      );
+    }
+    if (changement === "nouveau") {
+      await notifierEquipe(
+        "rdv_equipe",
+        {
+          title: `Nouveau RDV : ${r.restaurant}`,
+          body: `${quand} · ${RDV_TYPES[r.type]} avec ${r.commercial}`,
+          url: `/agenda?rdv=${r.id}`,
+          tag: `rdv-equipe-${r.id}`,
+        },
+        { sauf: session.email, exclure: [r.commercial] },
+      );
+    }
   } catch (e) {
     console.error("Notification de RDV non envoyée", e);
   }
+}
+
+/** Enregistre les notifications choisies dans Paramètres (valables sur tous les appareils). */
+export async function enregistrerPreferences(types: string[]): Promise<Result> {
+  const session = await moi();
+  if (!session) return { ok: false, error: "Ta session a expiré : reconnecte-toi." };
+  const { error } = await createAdminClient()
+    .from("membres")
+    .update({ notifications: types.filter(estTypeNotif) })
+    .eq("id", session.me.id);
+  if (error) {
+    console.error("Préférences de notification non enregistrées", error);
+    return { ok: false, error: "Ton choix n’a pas pu être enregistré. Réessaie." };
+  }
+  return { ok: true };
 }

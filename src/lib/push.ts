@@ -1,6 +1,8 @@
 import "server-only";
 import webpush from "web-push";
+import { preferencesDe, type TypeNotif } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Membre } from "@/lib/types";
 
 /** Contenu d'une notification ; `url` est la page ouverte quand on la touche. */
 export type Notif = { title: string; body: string; url?: string; tag?: string };
@@ -60,15 +62,27 @@ export async function notifier(emails: string[], notif: Notif) {
   return envois.filter(Boolean).length;
 }
 
-/** Emails des membres qui portent ces prénoms. */
-export async function emailsDe(noms: string[]) {
-  if (!noms.length) return [];
-  const { data } = await createAdminClient().from("membres").select("email").in("nom", noms);
-  return (data ?? []).map((m) => m.email as string);
-}
-
-/** Emails de la direction (tous les membres qui ne sont pas commerciaux), sauf celui donné. */
-export async function emailsDirection(sauf?: string) {
-  const { data } = await createAdminClient().from("membres").select("email").neq("role", "commercial");
-  return (data ?? []).map((m) => m.email as string).filter((e) => e.toLowerCase() !== sauf?.toLowerCase());
+/**
+ * Envoie la notification aux membres qui ont choisi ce type dans Paramètres,
+ * jamais à l'auteur de l'action (`sauf`, son email).
+ * `seulement` / `exclure` : prénoms des membres à viser ou à écarter.
+ */
+export async function notifierEquipe(
+  type: TypeNotif,
+  notif: Notif,
+  { sauf, seulement, exclure }: { sauf?: string | null; seulement?: string[]; exclure?: string[] } = {},
+) {
+  if (!pushDisponible()) return 0;
+  const { data, error } = await createAdminClient().from("membres").select("*");
+  if (error) {
+    console.error("Membres non lus", error);
+    return 0;
+  }
+  const emails = ((data ?? []) as Membre[])
+    .filter((m) => m.email.toLowerCase() !== sauf?.toLowerCase())
+    .filter((m) => !seulement || seulement.includes(m.nom))
+    .filter((m) => !exclure?.includes(m.nom))
+    .filter((m) => preferencesDe(m).includes(type))
+    .map((m) => m.email);
+  return notifier(emails, notif);
 }

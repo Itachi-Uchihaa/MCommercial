@@ -1,45 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthCard } from "@/components/AuthCard";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { createClient } from "@/lib/supabase/client";
+
+/** Message lisible pour une erreur Supabase au changement de mot de passe. */
+function message(code: string | undefined) {
+  if (code === "same_password") return "Choisis un mot de passe différent de l’ancien.";
+  if (code === "weak_password") return "Ce mot de passe est trop simple : mélange lettres et chiffres, 8 caractères minimum.";
+  if (code === "session_not_found" || code === "session_expired") return "expire";
+  return "Le mot de passe n’a pas pu être enregistré. Vérifie ton réseau et réessaie.";
+}
 
 export default function ResetPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+  const champ = useRef<HTMLInputElement>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) return setError("8 caractères minimum.");
-    setLoading(true);
+    if (password.length < 8) {
+      setErreur("Ton mot de passe doit faire au moins 8 caractères.");
+      return champ.current?.focus();
+    }
+    setErreur(null);
+    setEnvoi(true);
     const { error } = await createClient().auth.updateUser({ password });
-    setLoading(false);
-    if (error) return setError(error.message);
+    setEnvoi(false);
+    if (error) return setErreur(message(error.code));
     router.replace("/");
     router.refresh();
   }
 
   return (
-    <AuthCard title="Nouveau mot de passe" subtitle="Choisis un mot de passe d’au moins 8 caractères.">
-      <form onSubmit={onSubmit} noValidate>
-        <label className="mb-3 block">
-          <span className="mb-1.5 block text-[13.5px] text-muted">Mot de passe</span>
-          <input
-            className="input"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error && <p className="mb-2.5 text-[13.5px] text-danger">{error}</p>}
-        <button disabled={loading} className="w-full rounded-2xl bg-brand py-4 font-bold text-white disabled:opacity-60">
-          Enregistrer
+    <AuthShell>
+      <h1 className="text-[28px] leading-tight font-extrabold tracking-tight">Nouveau mot de passe</h1>
+      <p className="mt-1.5 mb-7 text-[15px] text-muted">Choisis un mot de passe d’au moins 8 caractères.</p>
+      <form onSubmit={onSubmit} noValidate className="grid gap-4.5">
+        {erreur && (
+          <p id="erreur" role="alert" className="rounded-xl bg-[#fdecea] px-3 py-2.5 text-[14px] text-danger">
+            {erreur === "expire" ? (
+              <>
+                Ce lien a expiré.{" "}
+                <Link href="/login" className="font-bold underline">
+                  Redemande un lien
+                </Link>{" "}
+                depuis la page de connexion.
+              </>
+            ) : (
+              erreur
+            )}
+          </p>
+        )}
+        <PasswordField
+          ref={champ}
+          id="password"
+          label="Mot de passe"
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          invalid={!!erreur}
+          describedBy={erreur ? "erreur" : undefined}
+        />
+        <button
+          type="submit"
+          disabled={envoi}
+          className="mt-1 flex h-13 items-center justify-center gap-2.5 rounded-2xl bg-brand font-bold text-white shadow-[0_6px_18px_rgba(17,94,245,.28)] hover:bg-[#0d52dc] disabled:cursor-progress disabled:opacity-85"
+        >
+          {envoi && (
+            <span aria-hidden className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" />
+          )}
+          {envoi ? "Enregistrement…" : "Enregistrer et me connecter"}
         </button>
       </form>
-    </AuthCard>
+    </AuthShell>
   );
 }

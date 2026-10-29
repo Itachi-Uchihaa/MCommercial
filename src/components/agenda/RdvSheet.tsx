@@ -14,6 +14,8 @@ type Props = {
   rdv: RendezVous | null;
   /** Valeurs de départ d'un nouveau RDV (jour touché, dossier d'origine…). */
   defaults: RdvDefaults;
+  /** Date du jour à Paris : on ne planifie pas de RDV avant. */
+  today: string;
   commerciaux: string[];
   dossiers: DossierLite[];
   onClose: () => void;
@@ -31,7 +33,7 @@ export function RdvSheet(props: Props) {
   );
 }
 
-function RdvForm({ rdv: r, defaults, commerciaux, dossiers, onSave, onDelete, findConflicts }: Props) {
+function RdvForm({ rdv: r, defaults, today, commerciaux, dossiers, onSave, onDelete, findConflicts }: Props) {
   const [dossierId, setDossierId] = useState(r ? r.dossier_id : defaults.dossier_id);
   const [restaurant, setRestaurant] = useState(r?.restaurant ?? "");
   const [commercial, setCommercial] = useState(r?.commercial ?? defaults.commercial);
@@ -76,6 +78,8 @@ function RdvForm({ rdv: r, defaults, commerciaux, dossiers, onSave, onDelete, fi
     if (!nom) return setError("Indique le nom du restaurant.");
     if (!commercial) return setError("Aucun commercial dans l'équipe : ajoute-en un dans Administration.");
     if (!jour) return setError("Indique la date du RDV.");
+    // Un RDV déjà passé garde sa date ; sinon, pas de RDV planifié dans le passé
+    if (jour < today && jour !== r?.jour) return setError("Choisis une date à partir d’aujourd’hui.");
     if (!debut || !fin) return setError("Indique l'heure de début et de fin.");
     if (fin <= debut) return setError("L'heure de fin doit être après l'heure de début.");
 
@@ -183,6 +187,7 @@ function RdvForm({ rdv: r, defaults, commerciaux, dossiers, onSave, onDelete, fi
         <input
           className="input"
           type="date"
+          min={today}
           value={jour}
           onChange={(e) => {
             setJour(e.target.value);

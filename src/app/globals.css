@@ -47,10 +47,14 @@ body {
 
 /* Champs de formulaire : 16px minimum pour éviter le zoom automatique sur iPhone */
 .input {
-  @apply w-full min-h-12 rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none focus:border-brand;
+  @apply w-full min-h-12 rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-4 focus:ring-brand/15;
 }
 .input::placeholder {
   color: #6b7280;
+}
+/* Champ en erreur : reste rouge, même sélectionné */
+.input[aria-invalid="true"] {
+  @apply border-danger focus:border-danger focus:ring-danger/15;
 }
 
 .safe-top {

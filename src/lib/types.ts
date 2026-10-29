@@ -5,6 +5,8 @@ export type Membre = {
   email: string;
   nom: string;
   role: Role;
+  /** Notifications choisies dans Paramètres (null : choix par défaut du rôle). */
+  notifications?: string[] | null;
   created_at: string;
 };
 

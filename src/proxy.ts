@@ -51,8 +51,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Tout sauf les fichiers statiques, les icônes, le manifest et le service worker.
+  // Tout sauf les fichiers statiques, les icônes, les images (photo et vidéo de la connexion),
+  // le manifest et le service worker.
   matcher: [
-    "/((?!_next/static|_next/image|icons/|icon.png|apple-icon.png|manifest.webmanifest|sw.js|favicon.ico).*)",
+    "/((?!_next/static|_next/image|icons/|images/|icon.png|apple-icon.png|manifest.webmanifest|sw.js|favicon.ico).*)",
   ],
 };

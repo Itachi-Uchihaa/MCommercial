@@ -1,12 +1,16 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { after } from "next/server";
+import { acteur } from "@/lib/acteur";
 import { isIsoDate } from "@/lib/agenda";
+import { notifierEquipe } from "@/lib/push";
 import { createClient } from "@/lib/supabase/server";
 import type { ResultatRdv, SuiteRdv } from "@/lib/types";
 import type { Result } from "./dossiers";
 
 const RESULTATS: ResultatRdv[] = ["positif", "a_relancer", "pas_interesse"];
+const RESULTAT_LABEL: Record<ResultatRdv, string> = { positif: "positif", a_relancer: "à relancer", pas_interesse: "pas intéressé" };
 const SUITES: SuiteRdv[] = ["devis", "nouveau_rdv", "rien"];
 
 export type CompteRenduInput = {
@@ -36,9 +40,24 @@ export async function enregistrerCompteRendu(input: CompteRenduInput): Promise<R
         compte_rendu_le: new Date().toISOString(),
       })
       .eq("id", input.rdvId)
-      .select("dossier_id")
+      .select("dossier_id, restaurant")
       .single();
     if (error) throw error;
+
+    after(async () => {
+      const a = await acteur(supabase);
+      const note = input.compteRendu.trim();
+      await notifierEquipe(
+        "compte_rendu",
+        {
+          title: `Compte rendu : ${rdv.restaurant}`,
+          body: `${a.nom} : ${RESULTAT_LABEL[input.resultat]}${note ? `. ${note.length > 90 ? `${note.slice(0, 90)}…` : note}` : "."}`,
+          url: rdv.dossier_id ? `/dossiers/${rdv.dossier_id}` : `/agenda?rdv=${input.rdvId}`,
+          tag: `cr-${input.rdvId}`,
+        },
+        { sauf: a.email },
+      );
+    });
 
     if (rdv.dossier_id) {
       const patch = input.classerPerdu

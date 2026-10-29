@@ -4,8 +4,9 @@ import { refresh } from "next/cache";
 import { after } from "next/server";
 import { addDays, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
-import { jourEtape } from "@/lib/dossiers";
-import { emailsDirection, notifier } from "@/lib/push";
+import { acteur } from "@/lib/acteur";
+import { RAISONS_PERTE, STEPS, jourEtape } from "@/lib/dossiers";
+import { notifierEquipe } from "@/lib/push";
 import { DEVIS_SANS_REPONSE_JOURS } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/server";
 import type { Dossier, DossierInfos, RaisonPerte, Source, StepKey } from "@/lib/types";
@@ -60,9 +61,25 @@ function infosValides(input: DossierInfos): DossierInfos {
 export async function creerDossier(input: DossierInfos): Promise<Result> {
   return run("Le dossier n’a pas pu être créé.", async () => {
     const supabase = await createClient();
-    const { data, error } = await supabase.from("dossiers").insert(infosValides(input)).select("id").single();
+    const infos = infosValides(input);
+    const { data, error } = await supabase.from("dossiers").insert(infos).select("id").single();
     if (error) throw error;
-    return data.id as string;
+    const id = data.id as string;
+    // Notifications envoyées après la réponse, pour ne pas ralentir l'écran
+    after(async () => {
+      const a = await acteur(supabase);
+      await notifierEquipe(
+        "nouveau_dossier",
+        {
+          title: `Nouveau dossier : ${infos.restaurant}`,
+          body: `Ajouté par ${a.nom}${infos.commercial !== a.nom ? `, suivi par ${infos.commercial}` : ""}.`,
+          url: `/dossiers/${id}`,
+          tag: `dossier-${id}`,
+        },
+        { sauf: a.email },
+      );
+    });
+    return id;
   });
 }
 
@@ -94,16 +111,20 @@ export async function changerEtape(id: string, key: StepKey, fait: boolean): Pro
     const { data: d, error } = await supabase.from("dossiers").update(patch).eq("id", id).select("restaurant, commercial").single();
     if (error) throw error;
 
-    // Une signature : la direction est prévenue, après la réponse pour ne pas ralentir l'écran
-    if (key === "signature" && fait) {
-      const { data: claims } = await supabase.auth.getClaims();
+    // Étape franchie : prévient ceux qui suivent cette étape, après la réponse
+    if (fait) {
       after(async () => {
-        await notifier(await emailsDirection(claims?.claims?.email as string | undefined), {
-          title: "Nouvelle signature",
-          body: `${d.commercial} a signé ${d.restaurant}.`,
-          url: `/dossiers/${id}`,
-          tag: `signature-${id}`,
-        });
+        const a = await acteur(supabase);
+        await notifierEquipe(
+          key,
+          {
+            title: `${STEPS.find((s) => s.key === key)!.long} : ${d.restaurant}`,
+            body: `Par ${a.nom}${d.commercial !== a.nom ? `, dossier de ${d.commercial}` : ""}.`,
+            url: `/dossiers/${id}`,
+            tag: `etape-${id}-${key}`,
+          },
+          { sauf: a.email },
+        );
       });
     }
   });
@@ -113,11 +134,26 @@ export async function marquerPerdu(id: string, raison: RaisonPerte): Promise<Res
   return run("Le dossier n’a pas pu être classé perdu.", async () => {
     if (!RAISONS.includes(raison)) throw new Refus("Choisis une raison.");
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data: d, error } = await supabase
       .from("dossiers")
       .update({ perdu_le: new Date().toISOString(), raison_perte: raison, relance_le: null })
-      .eq("id", id);
+      .eq("id", id)
+      .select("restaurant")
+      .single();
     if (error) throw error;
+    after(async () => {
+      const a = await acteur(supabase);
+      await notifierEquipe(
+        "perdu",
+        {
+          title: `Dossier perdu : ${d.restaurant}`,
+          body: `${RAISONS_PERTE[raison]}, classé par ${a.nom}.`,
+          url: `/dossiers/${id}`,
+          tag: `perdu-${id}`,
+        },
+        { sauf: a.email },
+      );
+    });
   });
 }
 

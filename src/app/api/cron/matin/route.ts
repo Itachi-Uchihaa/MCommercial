@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { RDV_TYPES, addDays, fmtHeure, todayParis } from "@/lib/agenda";
 import { parisTime } from "@/lib/dates";
+import { preferencesDe } from "@/lib/notifications";
 import { notifier } from "@/lib/push";
 import { relancesDe } from "@/lib/relances";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
 
   let envoyes = 0;
   for (const m of (membres ?? []) as Membre[]) {
+    if (!preferencesDe(m).includes("recap_matin")) continue; // désactivé dans Paramètres
     let notif;
     if (m.role === "commercial") {
       const siens = duJour.filter((r) => r.commercial === m.nom);

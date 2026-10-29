@@ -6,9 +6,9 @@ import { requireMembre } from "@/lib/session";
 import type { DossierLite, RendezVous } from "@/lib/types";
 
 /**
- * Agenda de l'équipe, semaine par semaine.
- * ?semaine=AAAA-MM-JJ ouvre la semaine de ce jour, ?commercial=Lamia filtre,
- * ?dossier=<id> ouvre « Nouveau RDV » pour ce dossier.
+ * Agenda de l'équipe.
+ * ?vue=liste : tous les RDV à venir d'un coup ; sinon semaine par semaine (?semaine=AAAA-MM-JJ).
+ * ?commercial=Lamia filtre, ?dossier=<id> ouvre « Nouveau RDV » pour ce dossier, ?rdv=<id> ouvre ce RDV.
  */
 export default function AgendaPage({ searchParams }: PageProps<"/agenda">) {
   return (
@@ -20,10 +20,17 @@ export default function AgendaPage({ searchParams }: PageProps<"/agenda">) {
 
 async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParams">) {
   const { supabase, me, canAdmin, equipe, today, nowTime } = await requireMembre();
-  const { semaine, dossier, commercial } = await searchParams;
-  const week = mondayOf(isIsoDate(semaine) ? semaine : today);
+  const { semaine, dossier, commercial, rdv, vue } = await searchParams;
+  const liste = vue === "liste";
 
-  const [{ data: rdvs }, { data: dossiers }] = await Promise.all([
+  // Lien vers un RDV précis : on ouvre sa semaine et sa fiche
+  const { data: ouvert } =
+    typeof rdv === "string" && /^[0-9a-f-]{36}$/i.test(rdv)
+      ? await supabase.from("rendez_vous").select("*").eq("id", rdv).maybeSingle<RendezVous>()
+      : { data: null };
+  const week = mondayOf(ouvert?.jour ?? (isIsoDate(semaine) ? semaine : today));
+
+  const [{ data: rdvs }, { data: dossiers }, { data: avenir }] = await Promise.all([
     supabase
       .from("rendez_vous")
       .select("*")
@@ -33,6 +40,9 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
       .order("debut")
       .returns<RendezVous[]>(),
     supabase.from("dossiers").select("id, restaurant, commercial").is("perdu_le", null).order("restaurant").returns<DossierLite[]>(),
+    liste
+      ? supabase.from("rendez_vous").select("*").gte("jour", today).order("jour").order("debut").limit(500).returns<RendezVous[]>()
+      : Promise.resolve({ data: null }),
   ]);
 
   return (
@@ -43,10 +53,13 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
       dossiers={dossiers ?? []}
       today={today}
       nowTime={nowTime}
+      initialVue={liste ? "liste" : "semaine"}
       initialWeek={week}
       initialRdvs={rdvs ?? []}
+      initialListe={avenir ?? []}
       initialFilter={typeof commercial === "string" ? commercial : "Tous"}
       openForDossier={typeof dossier === "string" ? dossier : null}
+      openRdv={ouvert ?? null}
     />
   );
 }

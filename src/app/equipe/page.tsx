@@ -48,7 +48,7 @@ async function Contenu({ searchParams }: Pick<PageProps<"/equipe">, "searchParam
       today={today}
       nowTime={nowTime}
       periode={periode}
-      stats={statsEquipe({ dossiers, rdvs, objectifs, commerciaux, today, nowTime, periode })}
+      stats={statsEquipe({ dossiers, rdvs, objectifs, commerciaux, today, periode })}
       aRelancer={Object.fromEntries(commerciaux.map((c) => [c, relances.filter((r) => r.commercial === c).length]))}
       blocages={relancesDe({ dossiers, rdvs, today, nowTime, blocages: true })}
       semaine={rdvs.filter((r) => r.jour >= lundi)}

@@ -26,15 +26,24 @@ export type Dossier = {
   activite: string | null;
   source: Source | null;
   devis_fait: boolean;
+  /** Ancienne étape « Devis accepté », plus affichée. */
   devis_accepte: boolean;
   signature: boolean;
+  /** Groupe SAV créé pour le client. */
+  groupe_sav: boolean;
+  form: boolean;
   enrolement_tpe: boolean;
   /** Dates des étapes, posées par la base quand la case est cochée. */
   devis_fait_le: string | null;
   devis_accepte_le: string | null;
   signature_le: string | null;
+  groupe_sav_le: string | null;
+  form_le: string | null;
   enrolement_tpe_le: string | null;
+  /** Ancienne étape « Installé », plus affichée. */
   date_installation: string | null;
+  /** Jour du premier RDV du dossier (tenu à jour par la base). */
+  rdv_le: string | null;
   perdu_le: string | null;
   raison_perte: RaisonPerte | null;
   /** Jour où le commercial veut être rappelé de relancer le client. */
@@ -99,9 +108,7 @@ export type RendezVousInput = Omit<
 >;
 
 /** Étapes affichées sur chaque carte, dans l'ordre du parcours commercial. */
-export type StepKey =
-  | "devis_fait"
-  | "devis_accepte"
-  | "signature"
-  | "enrolement_tpe"
-  | "installe";
+export type StepKey = "rdv" | "devis_fait" | "signature" | "groupe_sav" | "form" | "enrolement_tpe";
+
+/** Étapes cochées à la main (« RDV » se coche toute seule quand le premier RDV a eu lieu). */
+export type EtapeManuelle = Exclude<StepKey, "rdv">;

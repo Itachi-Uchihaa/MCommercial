@@ -207,7 +207,7 @@ export function Equipe(props: Props) {
         </div>
         <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
           {s.parCommercial.map((c) => (
-            <article key={c.nom} className="card px-4 py-3.5">
+            <Link key={c.nom} href={`/equipe/${encodeURIComponent(c.nom)}`} className="card block px-4 py-3.5 hover:border-[#c9cfdc]">
               <div className="flex items-center gap-2">
                 <span aria-hidden className="size-2.5 rounded-full" style={{ background: colorOf(c.nom, equipe).bar }} />
                 <b className="flex-1">{c.nom}</b>
@@ -231,7 +231,7 @@ export function Equipe(props: Props) {
                   </>
                 )}
               </p>
-            </article>
+            </Link>
           ))}
         </div>
       </section>

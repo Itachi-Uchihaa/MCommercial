@@ -74,16 +74,18 @@ export function AdminPanel({ me, membres }: { me: Membre; membres: MembreRow[] }
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-4 pb-[calc(110px+env(safe-area-inset-bottom,0px))]">
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2 min-[375px]:gap-2.5">
           {[
             ["Membres", counts.total],
             ["Commerciaux", counts.commerciaux],
             ["Sans connexion", counts.jamais],
           ].map(([label, value]) => (
-            <div key={label} className="card min-w-0 px-2.5 pt-3 pb-2.5 min-[375px]:px-3">
+            <div key={label} className="card min-w-0 px-2 pt-3 pb-2.5 min-[375px]:px-3">
               <b className="block text-[28px] leading-tight font-extrabold text-brand tabular-nums">{value}</b>
               {/* Un peu plus petit sur les petits écrans : « Commerciaux » tient dans sa case */}
-              <span className="block text-[12px] leading-snug text-muted min-[375px]:text-[13px]">{label}</span>
+              <span className="block text-[11.5px] leading-snug tracking-tight text-muted min-[375px]:text-[13px] min-[375px]:tracking-normal">
+                {label}
+              </span>
             </div>
           ))}
         </div>

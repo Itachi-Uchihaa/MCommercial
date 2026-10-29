@@ -10,6 +10,7 @@ Onglets en bas sur téléphone, menu latéral sur ordinateur. Tout se met à jou
 
 - **Aujourd'hui** (accueil) : objectif du mois, prochain RDV (itinéraire, appel, fiche), RDV du jour, « À relancer ». Un commercial voit sa journée, le directeur celle de l'équipe.
 - **Dossiers** : pipeline par étape (prospects, devis, acceptés, signés, TPE, installés, perdus), recherche, filtre par commercial. Chaque carte montre l'avancement, la dernière étape datée et le prochain RDV.
+- **Clients** : carnet de tous les restaurants suivis, de A à Z, avec leur statut (client signé, en cours, perdu), recherche (nom, gérant, ville, téléphone…) et raccourcis pour appeler, écrire ou lancer l'itinéraire.
 - **Fiche client** : parcours daté (la date de chaque étape est posée par la base), bouton « étape suivante », « Classer perdu » avec la raison, RDV avec compte rendu, journal (notes de l'équipe et historique automatique), infos.
 - **Nouveau dossier** : recherche par nom ou SIRET dans l'annuaire officiel des entreprises (nom, adresse, gérant, activité remplis tout seuls), alerte si le restaurant est déjà suivi par un collègue, source du contact.
 - **Agenda** : vue Semaine, ou vue Liste (tous les RDV à venir ou des 60 derniers jours, avec recherche) ; filtre par commercial, alerte si deux RDV se chevauchent, pas de RDV planifié dans le passé, compte rendu après chaque RDV (résultat, suite, jour de rappel).
@@ -98,6 +99,7 @@ src/
   app/
     page.tsx              Aujourd'hui (accueil ; « Accès non autorisé » pour un compte hors équipe)
     dossiers/             pipeline (?etape=&commercial=&q=), fiche [id], nouveau
+    clients/              carnet des clients de A à Z (?statut=client|en_cours|perdu&q=)
     agenda/               agenda (?semaine=AAAA-MM-JJ, ?commercial=, ?dossier=<id> pour planifier un RDV)
     equipe/               pilotage de l'équipe (?periode=semaine|mois|trimestre)
     actions/              actions serveur : dossiers, compte rendu, objectifs (puis refresh de la page)
@@ -107,7 +109,7 @@ src/
     admin/, parametres/   Administration (ADMIN_EMAILS) et prénom de chacun
     manifest.ts           manifest PWA
   components/             AppShell (onglets, menu latéral), BottomSheet, CompteRenduSheet, McaisseLogo, icons…
-    aujourdhui/, dossiers/, agenda/, equipe/   écrans
+    aujourdhui/, dossiers/, clients/, agenda/, equipe/   écrans
   lib/
     session.ts            contexte commun des pages (membre connecté, équipe, jour et heure de Paris)
     dossiers.ts           étapes, dates d'étape, sources, raisons de perte

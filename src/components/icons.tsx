@@ -35,6 +35,12 @@ export const IconCalendar = (p: P) => (
     <path d="M16 3v4M8 3v4M3 10h18" />
   </Svg>
 );
+export const IconUsers = (p: P) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-2.5-5.1" />
+  </Svg>
+);
 export const IconChart = (p: P) => (
   <Svg {...p}>
     <path d="M4 20V11M10 20V5M16 20v-6M21 20H3" />

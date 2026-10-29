@@ -126,19 +126,22 @@ export function AgendaListe({
                       <span className={`w-12 flex-none font-bold tabular-nums ${passe ? "text-ink-soft" : ""}`}>{fmtHeure(r.debut)}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold break-words">{nom(r)}</span>
-                        <span className="block truncate text-[13px] text-muted">
-                          {RDV_TYPES[r.type]}
-                          {r.adresse && ` · ${r.adresse}`}
+                        {/* Le commercial sous le nom : le nom garde toute la largeur */}
+                        <span className="mt-0.5 flex items-center gap-1.5">
+                          {showCommercial && (
+                            <span
+                              className="flex-none rounded-full px-2 py-0.5 text-[12px] font-semibold"
+                              style={{ background: color.soft, color: color.ink }}
+                            >
+                              {r.commercial}
+                            </span>
+                          )}
+                          <span className="min-w-0 truncate text-[13px] text-muted">
+                            {RDV_TYPES[r.type]}
+                            {r.adresse && ` · ${r.adresse}`}
+                          </span>
                         </span>
                       </span>
-                      {showCommercial && (
-                        <span
-                          className="flex-none rounded-full px-2.5 py-1 text-[12.5px] font-semibold"
-                          style={{ background: color.soft, color: color.ink }}
-                        >
-                          {r.commercial}
-                        </span>
-                      )}
                       {!passe && <IconChevronRight className="size-[18px] text-[#8e95a5]" />}
                     </button>
                     {passe &&

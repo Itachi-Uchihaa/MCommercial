@@ -59,7 +59,7 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
       subtitle={maj(fmtJour(today))}
       action={{ label: "Ajouter un dossier", href: "/dossiers/nouveau" }}
     >
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2 lg:items-start">
         <div className="space-y-5">
           <Objectif {...objectif} today={today} estCommercial={estCommercial} canAdmin={canAdmin} />
 

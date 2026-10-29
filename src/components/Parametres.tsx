@@ -17,13 +17,16 @@ export function Parametres({ me }: { me: Membre }) {
 
   return (
     <>
-      <header className="safe-top sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/90 px-4 pb-3 backdrop-blur-md">
-        <Link href="/" aria-label="Revenir à l’accueil" className="grid size-11 place-items-center rounded-full bg-canvas text-xl">
-          ‹
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-extrabold tracking-tight">Paramètres</h1>
-          <p className="truncate text-[13px] text-muted">{me.email}</p>
+      {/* Contenu de l'en-tête à la largeur de la page : sur ordinateur, il n'est plus collé à gauche */}
+      <header className="safe-top sticky top-0 z-20 border-b border-line bg-white/90 px-4 pb-3 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <Link href="/" aria-label="Revenir à l’accueil" className="grid size-11 place-items-center rounded-full bg-canvas text-xl">
+            ‹
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-extrabold tracking-tight">Paramètres</h1>
+            <p className="truncate text-[13px] text-muted">{me.email}</p>
+          </div>
         </div>
       </header>
 

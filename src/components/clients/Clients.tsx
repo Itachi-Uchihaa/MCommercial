@@ -185,15 +185,17 @@ function ClientLigne({ d, premier }: { d: Dossier; premier: boolean }) {
           {d.restaurant.trim().charAt(0).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className="truncate font-semibold">{d.restaurant}</span>
+          {/* Nom en entier (deux lignes au plus), statut sur la ligne des détails */}
+          <span className="line-clamp-2 font-semibold break-words">{d.restaurant}</span>
+          <span className="mt-0.5 flex items-center gap-1.5">
             <span className={`flex-none rounded-full px-2 py-0.5 text-[11.5px] font-bold ${BADGE[statut].className}`}>
               {BADGE[statut].label}
             </span>
+            {details && <span className="min-w-0 truncate text-[13px] text-muted">{details}</span>}
           </span>
-          {details && <span className="block truncate text-[13px] text-muted">{details}</span>}
         </span>
-        <IconChevronRight className="size-4 text-muted lg:hidden" />
+        {/* La flèche seulement sans raccourci téléphone : sur petit écran, la place va au nom */}
+        {!d.telephone && <IconChevronRight className="size-4 flex-none text-muted lg:hidden" />}
       </Link>
       <span className="flex gap-1.5">
         {d.telephone && (

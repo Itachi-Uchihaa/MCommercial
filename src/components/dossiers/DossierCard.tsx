@@ -26,18 +26,21 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
       href={`/dossiers/${d.id}`}
       className={`card block px-4 py-3.5 hover:border-[#c9cfdc] ${relance ? "border-warn-line" : ""} ${d.perdu_le ? "bg-[#f7f8fa]" : ""}`}
     >
-      <span className="flex items-start gap-2">
-        <span className="min-w-0 flex-1 text-[17px] font-bold break-words">{d.restaurant}</span>
-        {relance && (
-          <span className="flex flex-none items-center gap-1 rounded-full bg-warn-soft px-2.5 py-1 text-[12.5px] font-bold text-warn">
-            <IconClock className="size-3.5" />À relancer
-          </span>
-        )}
-        {d.perdu_le && (
-          <span className="flex-none rounded-full bg-[#e6e8ef] px-2.5 py-1 text-[12.5px] font-bold text-ink-soft">Perdu</span>
-        )}
-      </span>
-      {meta && <span className="mt-0.5 block text-[13px] text-muted">{meta}</span>}
+      <span className="block text-[17px] font-bold break-words">{d.restaurant}</span>
+      {/* Badges sur la ligne du commercial et de la ville : le nom garde toute la largeur */}
+      {(meta || relance || d.perdu_le) && (
+        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+          {meta && <span className="mr-auto text-[13px] text-muted">{meta}</span>}
+          {relance && (
+            <span className="flex flex-none items-center gap-1 rounded-full bg-warn-soft px-2.5 py-1 text-[12.5px] font-bold text-warn">
+              <IconClock className="size-3.5" />À relancer
+            </span>
+          )}
+          {d.perdu_le && (
+            <span className="flex-none rounded-full bg-[#e6e8ef] px-2.5 py-1 text-[12.5px] font-bold text-ink-soft">Perdu</span>
+          )}
+        </span>
+      )}
 
       <span aria-hidden className="mt-3 grid gap-1" style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}>
         {STEPS.map((s, i) => (
@@ -64,7 +67,7 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
           </span>
         )}
       </span>
-      {equipements && <span className="mt-1 block truncate text-[13px] text-muted">Devis : {equipements}</span>}
+      {equipements && <span className="mt-1 block text-[13px] text-muted">Devis : {equipements}</span>}
       {relance && <span className="mt-1 block text-[13px] font-semibold text-warn">{relance}</span>}
     </Link>
   );

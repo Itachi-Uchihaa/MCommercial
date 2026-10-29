@@ -183,7 +183,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
         </Link>
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-2 lg:items-start">
         <div className="space-y-3">
           <section aria-labelledby="avancement" className="card p-4">
             <div className="flex items-baseline justify-between gap-2">

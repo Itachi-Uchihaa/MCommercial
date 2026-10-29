@@ -1,35 +1,40 @@
+import { todayParis } from "@/lib/agenda";
 import { parisDay } from "@/lib/dates";
-import type { Dossier, RaisonPerte, Source, StepKey } from "@/lib/types";
+import type { Dossier, EtapeManuelle, RaisonPerte, Source, StepKey } from "@/lib/types";
 
-/** Les étapes du parcours, dans l'ordre. */
+/** Les étapes du parcours, dans l'ordre. « RDV » se coche toute seule, les autres à la main. */
 export const STEPS: { key: StepKey; court: string; long: string }[] = [
+  { key: "rdv", court: "RDV", long: "RDV fait" },
   { key: "devis_fait", court: "Devis", long: "Devis envoyé" },
-  { key: "devis_accepte", court: "Accepté", long: "Devis accepté" },
   { key: "signature", court: "Signé", long: "Signé" },
+  { key: "groupe_sav", court: "SAV", long: "Groupe SAV créé" },
+  { key: "form", court: "Form", long: "Form" },
   { key: "enrolement_tpe", court: "TPE", long: "TPE enrôlé" },
-  { key: "installe", court: "Installé", long: "Installé" },
 ];
+
+export const ETAPES_MANUELLES: EtapeManuelle[] = ["devis_fait", "signature", "groupe_sav", "form", "enrolement_tpe"];
 
 const DATE_ETAPE = {
   devis_fait: "devis_fait_le",
-  devis_accepte: "devis_accepte_le",
   signature: "signature_le",
+  groupe_sav: "groupe_sav_le",
+  form: "form_le",
   enrolement_tpe: "enrolement_tpe_le",
 } as const;
 
+/** « RDV » : le premier RDV du dossier a eu lieu (son jour est arrivé). */
 export function isDone(d: Dossier, key: StepKey) {
-  return key === "installe" ? !!d.date_installation : d[key];
+  return key === "rdv" ? !!d.rdv_le && d.rdv_le <= todayParis() : d[key];
 }
 
 /** Modification d'une étape, telle que la base l'enregistre (affichage immédiat avant la réponse). */
-export function patchEtape(key: StepKey, fait: boolean, today: string): Partial<Dossier> {
-  if (key === "installe") return { date_installation: fait ? today : null };
+export function patchEtape(key: EtapeManuelle, fait: boolean): Partial<Dossier> {
   return { [key]: fait, [DATE_ETAPE[key]]: fait ? new Date().toISOString() : null };
 }
 
 /** Jour (AAAA-MM-JJ, heure de Paris) où l'étape a été franchie. */
 export function jourEtape(d: Dossier, key: StepKey): string | null {
-  if (key === "installe") return d.date_installation;
+  if (key === "rdv") return isDone(d, "rdv") ? d.rdv_le : null;
   const ts = d[DATE_ETAPE[key]];
   return ts ? parisDay(ts) : null;
 }
@@ -55,16 +60,17 @@ export function etapeDe(d: Dossier): Etape {
 export const FILTRES_ETAPE: { key: Etape | "tous"; label: string }[] = [
   { key: "tous", label: "Tous" },
   { key: "prospect", label: "Prospects" },
+  { key: "rdv", label: "RDV faits" },
   { key: "devis_fait", label: "Devis" },
-  { key: "devis_accepte", label: "Acceptés" },
   { key: "signature", label: "Signés" },
+  { key: "groupe_sav", label: "SAV" },
+  { key: "form", label: "Form" },
   { key: "enrolement_tpe", label: "TPE" },
-  { key: "installe", label: "Installés" },
   { key: "perdu", label: "Perdus" },
 ];
 
-/** Prochaine étape à franchir, dans l'ordre du parcours (null : tout est fait). */
-export const prochaineEtape = (d: Dossier) => STEPS.find((s) => !isDone(d, s.key)) ?? null;
+/** Prochaine étape à franchir : celle qui suit l'étape la plus avancée (null : tout est fait). */
+export const prochaineEtape = (d: Dossier) => STEPS[niveau(d) + 1] ?? null;
 
 /** Dernière étape franchie et son jour, pour la carte : « Devis envoyé il y a 9 j ». */
 export function derniereEtape(d: Dossier) {

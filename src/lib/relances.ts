@@ -1,18 +1,18 @@
 import { fmtHeure, fmtJourCourt } from "@/lib/agenda";
 import { depuis, joursEntre } from "@/lib/dates";
-import { jourEtape } from "@/lib/dossiers";
+import { derniereEtape, jourEtape, prochaineEtape } from "@/lib/dossiers";
 import type { Dossier, RendezVous } from "@/lib/types";
 
 /** Un devis sans réponse depuis ce nombre de jours est à relancer. */
 export const DEVIS_SANS_REPONSE_JOURS = 7;
-/** Un dossier signé (ou TPE enrôlé) qui n'avance plus depuis ce nombre de jours est bloqué. */
+/** Un dossier signé qui n'avance plus (groupe SAV, Form, TPE) depuis ce nombre de jours est bloqué. */
 export const ATTENTE_ETAPE_JOURS = 10;
 /** Au-delà, un RDV sans compte rendu n'est plus réclamé. */
 const COMPTE_RENDU_JOURS_MAX = 30;
 
 export type Relance = {
   cle: string;
-  type: "rappel" | "devis" | "compte_rendu" | "tpe" | "installation";
+  type: "rappel" | "devis" | "compte_rendu" | "apres_signature";
   dossierId: string | null;
   /** RDV concerné (compte rendu à faire). */
   rdv?: RendezVous;
@@ -47,7 +47,8 @@ export function relancesDe({
   const out: Relance[] = [];
 
   for (const d of dossiers) {
-    if (d.perdu_le || d.date_installation) continue;
+    // Perdu, ou TPE enrôlé (dernière étape) : plus rien à suivre
+    if (d.perdu_le || d.enrolement_tpe) continue;
     const base = { dossierId: d.id, restaurant: d.restaurant, commercial: d.commercial };
     const devisLe = jourEtape(d, "devis_fait");
 
@@ -59,7 +60,7 @@ export function relancesDe({
         jours: joursEntre(d.relance_le, today),
         motif: d.relance_le === today ? "Relance prévue aujourd’hui" : `Relance prévue le ${fmtJourCourt(d.relance_le)}`,
       });
-    } else if (d.devis_fait && !d.devis_accepte && !d.signature && devisLe && !d.relance_le) {
+    } else if (d.devis_fait && !d.signature && devisLe && !d.relance_le) {
       // relance_le dans le futur = relance déjà faite, on attend
       const n = joursEntre(devisLe, today);
       if (n >= DEVIS_SANS_REPONSE_JOURS) {
@@ -67,18 +68,20 @@ export function relancesDe({
       }
     }
 
-    if (blocages) {
-      const signeLe = jourEtape(d, "signature");
-      const tpeLe = jourEtape(d, "enrolement_tpe");
-      if (d.signature && !d.enrolement_tpe && signeLe) {
-        const n = joursEntre(signeLe, today);
+    // Signé, mais la suite (groupe SAV, Form, TPE) n'avance plus
+    if (blocages && d.signature) {
+      const derniere = derniereEtape(d);
+      const suite = prochaineEtape(d);
+      if (derniere?.jour && suite) {
+        const n = joursEntre(derniere.jour, today);
         if (n >= ATTENTE_ETAPE_JOURS) {
-          out.push({ ...base, cle: `tpe-${d.id}`, type: "tpe", jours: n, motif: `Signé ${depuis(n)}, TPE pas enrôlé` });
-        }
-      } else if (d.enrolement_tpe && tpeLe) {
-        const n = joursEntre(tpeLe, today);
-        if (n >= ATTENTE_ETAPE_JOURS) {
-          out.push({ ...base, cle: `install-${d.id}`, type: "installation", jours: n, motif: `TPE enrôlé ${depuis(n)}, pas installé` });
+          out.push({
+            ...base,
+            cle: `suite-${d.id}`,
+            type: "apres_signature",
+            jours: n,
+            motif: `${derniere.long} ${depuis(n)}, « ${suite.long} » pas fait`,
+          });
         }
       }
     }

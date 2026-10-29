@@ -109,10 +109,10 @@ export function Equipe(props: Props) {
           <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.delaiMoyen === null ? "–" : `${s.delaiMoyen} j`}</p>
           <p className="mt-0.5 text-[12.5px] text-muted">du premier RDV à la signature</p>
         </Tuile>
-        <Tuile titre="Installés">
-          <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.installes}</p>
-          <p className={`mt-0.5 text-[12.5px] ${s.enAttenteInstall ? "font-semibold text-warn" : "text-muted"}`}>
-            {s.enAttenteInstall ? `${s.enAttenteInstall} signé${s.enAttenteInstall > 1 ? "s" : ""} en attente` : "aucun en attente"}
+        <Tuile titre="TPE enrôlés">
+          <p className="text-[28px] leading-tight font-extrabold tabular-nums">{s.tpe}</p>
+          <p className={`mt-0.5 text-[12.5px] ${s.enAttenteTpe ? "font-semibold text-warn" : "text-muted"}`}>
+            {s.enAttenteTpe ? `${s.enAttenteTpe} signé${s.enAttenteTpe > 1 ? "s" : ""} en attente` : "aucun en attente"}
           </p>
         </Tuile>
       </div>
@@ -238,7 +238,7 @@ export function Equipe(props: Props) {
 
       <section aria-labelledby="parcours" className="card mt-5 p-4 lg:p-5">
         <h2 id="parcours" className="text-[17px] font-bold">
-          Du RDV à l’installation
+          Du RDV à l’enrôlement TPE
         </h2>
         <div className="mt-3.5 flex flex-col gap-2.5 text-[14px]">
           {s.entonnoir.map((e, i) => {
@@ -509,11 +509,12 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["E-mail", (d) => d.mail],
     ["Adresse", (d) => d.adresse],
     ["Source", (d) => (d.source ? SOURCES[d.source] : "")],
+    ["Premier RDV le", (d) => d.rdv_le],
     ["Devis envoyé le", (d) => jour(d.devis_fait_le)],
-    ["Devis accepté le", (d) => jour(d.devis_accepte_le)],
     ["Signé le", (d) => jour(d.signature_le)],
+    ["Groupe SAV créé le", (d) => jour(d.groupe_sav_le)],
+    ["Form le", (d) => jour(d.form_le)],
     ["TPE enrôlé le", (d) => jour(d.enrolement_tpe_le)],
-    ["Installé le", (d) => d.date_installation],
     ["Perdu le", (d) => jour(d.perdu_le)],
     ["Raison de la perte", (d) => (d.raison_perte ? RAISONS_PERTE[d.raison_perte] : "")],
     ["Créé le", (d) => jour(d.created_at)],

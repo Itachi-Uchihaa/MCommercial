@@ -1,8 +1,7 @@
 import { addDays, isoWeek, mondayOf } from "@/lib/agenda";
 import { debutDuMois, finDuMois, joursEntre, nomDuMois, parisDay } from "@/lib/dates";
-import { RAISONS_PERTE, SOURCES, jourEtape } from "@/lib/dossiers";
-import { rdvPasse } from "@/lib/relances";
-import type { Dossier, Objectif, RaisonPerte, RendezVous, Source } from "@/lib/types";
+import { RAISONS_PERTE, SOURCES, STEPS, jourEtape } from "@/lib/dossiers";
+import type { Dossier, Objectif, RaisonPerte, RendezVous, Source, StepKey } from "@/lib/types";
 
 export type Periode = "semaine" | "mois" | "trimestre";
 
@@ -41,7 +40,6 @@ export function statsEquipe({
   objectifs,
   commerciaux,
   today,
-  nowTime,
   periode,
 }: {
   dossiers: Dossier[];
@@ -49,13 +47,12 @@ export function statsEquipe({
   objectifs: Objectif[];
   commerciaux: string[];
   today: string;
-  nowTime: string;
   periode: Periode;
 }) {
   const b = bornes(periode, today);
   const signes = dossiers.filter((d) => dans(jourEtape(d, "signature"), b));
   const devis = dossiers.filter((d) => dans(jourEtape(d, "devis_fait"), b));
-  const installes = dossiers.filter((d) => dans(d.date_installation, b));
+  const tpe = dossiers.filter((d) => dans(jourEtape(d, "enrolement_tpe"), b));
 
   // Délai moyen : du premier RDV (ou de la création du dossier) à la signature
   const premierRdv = new Map<string, string>();
@@ -82,7 +79,7 @@ export function statsEquipe({
     return {
       nom,
       rdvSemaine: rdvs.filter((r) => r.commercial === nom && dans(r.jour, semaine)).length,
-      devisEnAttente: siens.filter((d) => !d.perdu_le && d.devis_fait && !d.devis_accepte && !d.signature).length,
+      devisEnAttente: siens.filter((d) => !d.perdu_le && d.devis_fait && !d.signature).length,
       signes: s,
       cible: cibleDe(nom),
       taux: dv ? Math.round((s / dv) * 100) : null,
@@ -108,16 +105,12 @@ export function statsEquipe({
     devis: devis.length,
     taux: devis.length ? Math.round((signes.length / devis.length) * 100) : null,
     delaiMoyen: delais.length ? Math.round(somme(delais) / delais.length) : null,
-    installes: installes.length,
-    enAttenteInstall: dossiers.filter((d) => !d.perdu_le && d.signature && !d.date_installation).length,
-    entonnoir: [
-      { label: "RDV réalisés", n: rdvs.filter((r) => dans(r.jour, b) && rdvPasse(r, today, nowTime)).length },
-      { label: "Devis envoyés", n: devis.length },
-      { label: "Acceptés", n: dossiers.filter((d) => dans(jourEtape(d, "devis_accepte"), b)).length },
-      { label: "Signés", n: signes.length },
-      { label: "TPE enrôlés", n: dossiers.filter((d) => dans(jourEtape(d, "enrolement_tpe"), b)).length },
-      { label: "Installés", n: installes.length },
-    ],
+    /** Dossiers arrivés au bout du parcours (TPE enrôlé) sur la période. */
+    tpe: tpe.length,
+    /** Signés dont le TPE n'est pas encore enrôlé (groupe SAV, Form ou TPE à faire). */
+    enAttenteTpe: dossiers.filter((d) => !d.perdu_le && d.signature && !d.enrolement_tpe).length,
+    // Une ligne par étape : dossiers qui l'ont franchie sur la période
+    entonnoir: STEPS.map((s) => ({ label: ENTONNOIR[s.key], n: dossiers.filter((d) => dans(jourEtape(d, s.key), b)).length })),
     parCommercial,
     perdus: perdus.length,
     pertes,
@@ -126,3 +119,12 @@ export function statsEquipe({
 }
 
 export type StatsEquipe = ReturnType<typeof statsEquipe>;
+
+const ENTONNOIR: Record<StepKey, string> = {
+  rdv: "Premier RDV",
+  devis_fait: "Devis envoyés",
+  signature: "Signés",
+  groupe_sav: "Groupe SAV",
+  form: "Form",
+  enrolement_tpe: "TPE enrôlés",
+};

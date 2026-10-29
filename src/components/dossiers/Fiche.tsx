@@ -21,7 +21,7 @@ import {
   villeDe,
 } from "@/lib/dossiers";
 import { rdvPasse } from "@/lib/relances";
-import type { Dossier, JournalEntry, Membre, RaisonPerte, RendezVous, ResultatRdv, StepKey } from "@/lib/types";
+import type { Dossier, EtapeManuelle, JournalEntry, Membre, RaisonPerte, RendezVous, ResultatRdv } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { BottomSheet } from "../BottomSheet";
@@ -43,12 +43,12 @@ type Props = {
   journal: JournalEntry[];
 };
 
-const ACTION_ETAPE: Record<StepKey, string> = {
+const ACTION_ETAPE: Record<EtapeManuelle, string> = {
   devis_fait: "Marquer le devis envoyé",
-  devis_accepte: "Marquer le devis accepté",
   signature: "Marquer le dossier signé",
+  groupe_sav: "Marquer le groupe SAV créé",
+  form: "Marquer le Form fait",
   enrolement_tpe: "Marquer le TPE enrôlé",
-  installe: "Marquer le dossier installé",
 };
 
 const RESULTATS: Record<ResultatRdv, string> = { positif: "positif", a_relancer: "à relancer", pas_interesse: "pas intéressé" };
@@ -83,14 +83,14 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
   const premier = rdvs[0];
   const ville = villeDe(d.adresse);
 
-  function etape(key: StepKey, fait: boolean) {
+  function etape(key: EtapeManuelle, fait: boolean) {
     const nom = STEPS.find((s) => s.key === key)!.long;
     if (!fait && !confirm(`Décocher « ${nom} » ? La date de l’étape sera effacée.`)) return;
-    // Sauter des étapes arrive surtout par erreur (un appui sur « Installé ») : on demande
-    const avant = STEPS.slice(0, STEPS.findIndex((s) => s.key === key)).filter((s) => !isDone(d, s.key));
+    // Sauter des étapes arrive surtout par erreur (un appui sur « TPE enrôlé ») : on demande. « RDV » se coche toute seule.
+    const avant = STEPS.slice(0, STEPS.findIndex((s) => s.key === key)).filter((s) => s.key !== "rdv" && !isDone(d, s.key));
     if (fait && avant.length && !confirm(`Cocher « ${nom} » alors que « ${avant[0].long} » n’est pas encore coché ?`)) return;
     start(async () => {
-      appliquer(patchEtape(key, fait, today));
+      appliquer(patchEtape(key, fait));
       const res = await changerEtape(d.id, key, fait);
       if (res.ok) showToast(`Étape « ${nom} » ${fait ? "cochée" : "décochée"}`);
       else showError(res.error);
@@ -184,16 +184,29 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
               <p className="text-[13px] text-muted">Ouvert {depuis(joursEntre(parisDay(d.created_at), today))}</p>
             </div>
             <ol className="mt-3.5">
-              <Etape
-                fait={!!premier}
-                dernier={false}
-                titre="Premier RDV"
-                detail={premier ? `${fmtJourCourt(premier.jour)} · ${RDV_TYPES[premier.type]} avec ${premier.commercial}` : "Pas encore de RDV"}
-              />
               {STEPS.map((s, i) => {
                 const fait = isDone(d, s.key);
                 const jour = jourEtape(d, s.key);
                 const courante = !d.perdu_le && suivante?.key === s.key;
+                // « RDV fait » se coche toute seule le jour du premier RDV de l'agenda
+                if (s.key === "rdv") {
+                  return (
+                    <Etape
+                      key={s.key}
+                      fait={fait}
+                      courante={courante}
+                      dernier={false}
+                      titre={courante ? `${s.long} · étape en cours` : s.long}
+                      detail={
+                        fait && premier
+                          ? `${fmtJourCourt(premier.jour)} · ${RDV_TYPES[premier.type]} avec ${premier.commercial}`
+                          : futurs[0]
+                            ? `RDV prévu ${fmtJourCourt(futurs[0].jour)} à ${fmtHeure(futurs[0].debut)}`
+                            : "Se coche toute seule après le premier RDV"
+                      }
+                    />
+                  );
+                }
                 return (
                   <Etape
                     key={s.key}
@@ -208,19 +221,27 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                           ? `RDV prévu ${fmtJourCourt(futurs[0].jour)} à ${fmtHeure(futurs[0].debut)}`
                           : undefined
                     }
-                    onToggle={d.perdu_le ? undefined : () => etape(s.key, !fait)}
+                    onToggle={d.perdu_le ? undefined : () => etape(s.key as EtapeManuelle, !fait)}
                     disabled={pending}
                   />
                 );
               })}
             </ol>
-            {!d.perdu_le && suivante && (
+            {!d.perdu_le && suivante?.key === "rdv" && !futurs.length && (
+              <Link
+                href={`/agenda?dossier=${d.id}`}
+                className="mt-4 flex h-13 w-full items-center justify-center rounded-[14px] bg-brand font-bold text-white"
+              >
+                Planifier un RDV
+              </Link>
+            )}
+            {!d.perdu_le && suivante && suivante.key !== "rdv" && (
               <button
-                onClick={() => etape(suivante.key, true)}
+                onClick={() => etape(suivante.key as EtapeManuelle, true)}
                 disabled={pending}
                 className="mt-4 h-13 w-full rounded-[14px] bg-brand font-bold text-white disabled:opacity-60"
               >
-                {ACTION_ETAPE[suivante.key]}
+                {ACTION_ETAPE[suivante.key as EtapeManuelle]}
               </button>
             )}
             {!d.perdu_le && (

@@ -5,19 +5,17 @@ import { after } from "next/server";
 import { addDays, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
 import { acteur } from "@/lib/acteur";
-import { RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
+import { ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
 import { getCurrentMembre } from "@/lib/auth";
 import { notifierEquipe } from "@/lib/push";
 import { DEVIS_SANS_REPONSE_JOURS } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/server";
-import type { Dossier, DossierInfos, RaisonPerte, Source, StepKey } from "@/lib/types";
+import type { Dossier, DossierInfos, EtapeManuelle, RaisonPerte, Source } from "@/lib/types";
 
 export type Result = { ok: true; id?: string } | { ok: false; error: string };
 
 const SOURCES: Source[] = ["terrain", "recommandation", "appel_entrant", "salon", "site_web", "autre"];
 const RAISONS: RaisonPerte[] = ["prix", "deja_equipe", "pas_le_moment", "pas_interesse", "autre"];
-const STEP_KEYS: StepKey[] = ["devis_fait", "devis_accepte", "signature", "enrolement_tpe", "installe"];
-
 /** Erreur montrée telle quelle (validation) ; toute autre erreur reste dans les logs. */
 class Refus extends Error {}
 
@@ -108,13 +106,13 @@ export async function supprimerDossier(id: string): Promise<Result> {
 }
 
 /** Coche ou décoche une étape. La base date l'étape et l'écrit dans le journal. */
-export async function changerEtape(id: string, key: StepKey, fait: boolean): Promise<Result> {
+export async function changerEtape(id: string, key: EtapeManuelle, fait: boolean): Promise<Result> {
   return run("L’étape n’a pas pu être enregistrée.", async () => {
-    if (!STEP_KEYS.includes(key)) throw new Refus("Étape inconnue. Recharge la page et réessaie.");
+    // « RDV » se coche toute seule, à partir de l'agenda
+    if (!ETAPES_MANUELLES.includes(key)) throw new Refus("Étape inconnue. Recharge la page et réessaie.");
     const supabase = await createClient();
-    const patch: Partial<Dossier> =
-      key === "installe" ? { date_installation: fait ? todayParis() : null } : { [key]: fait };
-    // Le devis accepté ou signé : plus rien à relancer
+    const patch: Partial<Dossier> = { [key]: fait };
+    // Signé ou plus loin : plus rien à relancer
     if (fait && key !== "devis_fait") patch.relance_le = null;
     const { data: d, error } = await supabase.from("dossiers").update(patch).eq("id", id).select("restaurant, commercial").single();
     if (error) throw error;
@@ -183,7 +181,7 @@ export async function relanceFaite(id: string): Promise<Result> {
     const { data: d, error: readError } = await supabase.from("dossiers").select("*").eq("id", id).single<Dossier>();
     if (readError) throw readError;
     const today = todayParis();
-    const enAttente = d.devis_fait && !d.devis_accepte && !d.signature;
+    const enAttente = d.devis_fait && !d.signature;
     const devisLe = jourEtape(d, "devis_fait");
     const encoreDue = enAttente && devisLe && joursEntre(devisLe, today) >= DEVIS_SANS_REPONSE_JOURS;
     const { error } = await supabase

@@ -8,10 +8,10 @@ export type TypeNotif =
   | "rdv_equipe"
   | "compte_rendu"
   | "devis_fait"
-  | "devis_accepte"
   | "signature"
+  | "groupe_sav"
+  | "form"
   | "enrolement_tpe"
-  | "installe"
   | "perdu";
 
 export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: TypeNotif; label: string }[] }[] = [
@@ -30,10 +30,10 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
       { key: "rdv_equipe", label: "Nouveau RDV planifié" },
       { key: "compte_rendu", label: "Compte rendu de RDV" },
       { key: "devis_fait", label: "Devis envoyé" },
-      { key: "devis_accepte", label: "Devis accepté" },
       { key: "signature", label: "Dossier signé" },
+      { key: "groupe_sav", label: "Groupe SAV créé" },
+      { key: "form", label: "Form" },
       { key: "enrolement_tpe", label: "TPE enrôlé" },
-      { key: "installe", label: "Dossier installé" },
       { key: "perdu", label: "Dossier perdu" },
     ],
   },

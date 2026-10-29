@@ -21,9 +21,10 @@ import type { DossierLite, Membre, RendezVous, RendezVousInput } from "@/lib/typ
 import { AppShell } from "../AppShell";
 import { Squelette } from "../Chargement";
 import { CompteRenduSheet } from "../CompteRenduSheet";
-import { IconCheck, IconChevronRight } from "../icons";
+import { IconCheck, IconChevronDown, IconChevronRight } from "../icons";
 import { Toast, useToast } from "../Toast";
 import { AgendaListe, type PeriodeListe } from "./AgendaListe";
+import { ChoixSemaine } from "./ChoixSemaine";
 import { RdvSheet, type RdvDefaults } from "./RdvSheet";
 
 type Vue = "semaine" | "liste";
@@ -97,6 +98,7 @@ export function Agenda({
   const [filter, setFilterState] = useState(initialFilter);
   const filterRef = useRef(initialFilter);
   const filtresRef = useRef<HTMLDivElement>(null);
+  const [choix, setChoix] = useState({ open: false, key: 0 });
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
   /** Dernier chargement en échec : on le dit, plutôt que d'afficher une semaine vide. */
@@ -373,10 +375,18 @@ export function Agenda({
             >
               ‹
             </button>
-            <div className="min-w-0 flex-1 text-center" aria-live="polite">
-              <p className="font-bold">Semaine {isoWeek(week)}</p>
-              <p className="text-[13px] text-muted">Du {fmtSemaine(week)}</p>
-            </div>
+            {/* Toucher la semaine ouvre le choix du mois, puis de la semaine */}
+            <button
+              onClick={() => setChoix((c) => ({ open: true, key: c.key + 1 }))}
+              aria-label={`Semaine ${isoWeek(week)} (du ${fmtSemaine(week)}) : choisir une autre semaine`}
+              className="min-w-0 flex-1 rounded-xl py-0.5 text-center hover:bg-canvas"
+            >
+              <span className="flex items-center justify-center gap-1 font-bold" aria-live="polite">
+                Semaine {isoWeek(week)}
+                <IconChevronDown className="size-4 text-brand" />
+              </span>
+              <span className="block text-[13px] text-muted">Du {fmtSemaine(week)}</span>
+            </button>
             <button
               onClick={() => goToWeek(addDays(week, 7))}
               aria-label="Semaine suivante"
@@ -509,6 +519,18 @@ export function Agenda({
           })}
         </div>
       )}
+
+      <ChoixSemaine
+        open={choix.open}
+        sessionKey={choix.key}
+        week={week}
+        today={today}
+        onClose={() => setChoix((c) => ({ ...c, open: false }))}
+        onChoisir={(lundi) => {
+          setChoix((c) => ({ ...c, open: false }));
+          goToWeek(lundi);
+        }}
+      />
 
       <RdvSheet
         open={sheet.open}

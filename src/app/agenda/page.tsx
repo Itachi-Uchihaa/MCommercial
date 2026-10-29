@@ -53,6 +53,9 @@ async function Contenu({ searchParams }: Pick<PageProps<"/agenda">, "searchParam
 
   return (
     <Agenda
+      // Next garde la page en mémoire d'une visite à l'autre : un autre lien (autre commercial, autre semaine…)
+      // doit repartir de ses paramètres, pas du filtre choisi la fois d'avant
+      key={JSON.stringify([semaine, dossier, commercial, rdv, vue, nouveau])}
       me={me}
       canAdmin={canAdmin}
       equipe={equipe}

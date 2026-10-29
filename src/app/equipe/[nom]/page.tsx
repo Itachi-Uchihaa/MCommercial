@@ -38,6 +38,7 @@ async function Contenu({ params }: Pick<PageProps<"/equipe/[nom]">, "params">) {
 
   return (
     <FicheCommercial
+      key={nom}
       me={me}
       canAdmin={canAdmin}
       equipe={equipe}

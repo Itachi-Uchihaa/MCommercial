@@ -96,6 +96,7 @@ export function Agenda({
   const [dossiers, setDossiers] = useState<DossierLite[]>(initialDossiers);
   const [filter, setFilterState] = useState(initialFilter);
   const filterRef = useRef(initialFilter);
+  const filtresRef = useRef<HTMLDivElement>(null);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
   /** Dernier chargement en échec : on le dit, plutôt que d'afficher une semaine vide. */
@@ -196,6 +197,8 @@ export function Agenda({
     filterRef.current = c;
     setFilterState(c);
     syncUrl(vueRef.current, weekRef.current, today, c);
+    // Le choisi passe en 2e position : on revient au début de la rangée pour qu'il reste sous les yeux
+    filtresRef.current?.scrollTo({ left: 0, behavior: "smooth" });
   }
 
   function setVue(v: Vue) {
@@ -326,6 +329,8 @@ export function Agenda({
   }
 
   const visibles = filter === "Tous" ? source : source.filter((r) => r.commercial === filter);
+  // Le commercial choisi passe juste après « Toute l'équipe », les autres gardent leur ordre
+  const ordreFiltres = filter === "Tous" ? commerciaux : [filter, ...commerciaux.filter((c) => c !== filter)];
   const days = Array.from({ length: 7 }, (_, i) => addDays(week, i));
   const currentWeek = mondayOf(today);
 
@@ -392,8 +397,8 @@ export function Agenda({
         </>
       )}
 
-      <div role="group" aria-label="Commercial" className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
-        {["Tous", ...commerciaux].map((c) => {
+      <div ref={filtresRef} role="group" aria-label="Commercial" className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
+        {["Tous", ...ordreFiltres].map((c) => {
           const n = c === "Tous" ? source.length : source.filter((r) => r.commercial === c).length;
           const active = filter === c;
           return (

@@ -15,9 +15,8 @@ $$;
 
 grant execute on function private.is_admin() to authenticated;
 
-drop policy "membres visibles par l'equipe" on public.membres;
-create policy "membres visibles par l'equipe" on public.membres
-  for select to authenticated
+-- Modifiée sur place (alter) plutôt que supprimée puis recréée : pas de moment sans règle
+alter policy "membres visibles par l'equipe" on public.membres
   using (
     (select private.is_membre())
     and (role <> 'admin' or (select private.is_admin()) or lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')))

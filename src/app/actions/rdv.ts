@@ -51,7 +51,7 @@ export async function enregistrerCompteRendu(input: CompteRenduInput): Promise<R
         "compte_rendu",
         {
           title: `Compte rendu : ${rdv.restaurant}`,
-          body: `${a.nom} : ${RESULTAT_LABEL[input.resultat]}${note ? `. ${note.length > 90 ? `${note.slice(0, 90)}…` : note}` : "."}`,
+          body: `RDV de ${a.nom} : ${RESULTAT_LABEL[input.resultat]}${note ? `. ${note.length > 90 ? `${note.slice(0, 90)}…` : note}` : "."}`,
           url: rdv.dossier_id ? `/dossiers/${rdv.dossier_id}` : `/agenda?rdv=${input.rdvId}`,
           tag: `cr-${input.rdvId}`,
         },

@@ -72,7 +72,7 @@ export async function creerDossier(input: DossierInfos): Promise<Result> {
         "nouveau_dossier",
         {
           title: `Nouveau dossier : ${infos.restaurant}`,
-          body: `Ajouté par ${a.nom}${infos.commercial !== a.nom ? `, suivi par ${infos.commercial}` : ""}.`,
+          body: infos.commercial !== a.nom ? `Ajouté par ${a.nom}, suivi par ${infos.commercial}.` : `Ajouté et suivi par ${a.nom}.`,
           url: `/dossiers/${id}`,
           tag: `dossier-${id}`,
         },
@@ -119,7 +119,7 @@ export async function changerEtape(id: string, key: StepKey, fait: boolean): Pro
           key,
           {
             title: `${STEPS.find((s) => s.key === key)!.long} : ${d.restaurant}`,
-            body: `Par ${a.nom}${d.commercial !== a.nom ? `, dossier de ${d.commercial}` : ""}.`,
+            body: d.commercial !== a.nom ? `Dossier de ${d.commercial}, mis à jour par ${a.nom}.` : `Dossier de ${a.nom}.`,
             url: `/dossiers/${id}`,
             tag: `etape-${id}-${key}`,
           },

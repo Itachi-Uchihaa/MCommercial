@@ -1,6 +1,6 @@
 "use server";
 
-import { RDV_TYPES, fmtHeure, fmtJourCourt } from "@/lib/agenda";
+import { RDV_TYPES, fmtHeureLongue, fmtJour } from "@/lib/agenda";
 import { estTypeNotif, preferencesDe } from "@/lib/notifications";
 import { notifier, notifierEquipe, pushDisponible } from "@/lib/push";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -89,14 +89,18 @@ export async function notifierRdv(rdvId: string, changement: "nouveau" | "modifi
     if (!session) return;
     const { data: r } = await session.supabase.from("rendez_vous").select("*").eq("id", rdvId).maybeSingle<RendezVous>();
     if (!r) return;
-    const quand = `${fmtJourCourt(r.jour)} à ${fmtHeure(r.debut)}`;
+    // Ex. « Démo le jeudi 30 octobre à 10 h » : le nom du client est dans le titre
+    const quoi = `${RDV_TYPES[r.type]} le ${fmtJour(r.jour)} à ${fmtHeureLongue(r.debut)}`;
 
     if (r.commercial !== session.me.nom) {
       await notifierEquipe(
         "rdv_pour_moi",
         {
-          title: changement === "nouveau" ? "Nouveau RDV pour toi" : "Ton RDV a été modifié",
-          body: `${quand} · ${RDV_TYPES[r.type]} chez ${r.restaurant} (par ${session.me.nom})`,
+          title: changement === "nouveau" ? `Nouveau RDV pour toi : ${r.restaurant}` : `RDV modifié : ${r.restaurant}`,
+          body:
+            changement === "nouveau"
+              ? `${quoi}. Ajouté par ${session.me.nom}.`
+              : `Désormais : ${quoi}. Modifié par ${session.me.nom}.`,
           url: `/agenda?rdv=${r.id}`,
           tag: `rdv-${r.id}`,
         },
@@ -108,7 +112,7 @@ export async function notifierRdv(rdvId: string, changement: "nouveau" | "modifi
         "rdv_equipe",
         {
           title: `Nouveau RDV : ${r.restaurant}`,
-          body: `${quand} · ${RDV_TYPES[r.type]} avec ${r.commercial}`,
+          body: `${quoi}. Commercial : ${r.commercial}.`,
           url: `/agenda?rdv=${r.id}`,
           tag: `rdv-equipe-${r.id}`,
         },

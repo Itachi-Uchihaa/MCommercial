@@ -87,6 +87,7 @@ Les évolutions se font par des fichiers datés dans `supabase/`, à exécuter u
 | `2026-10-29_parcours.sql` | Dates des étapes (posées par la base), perte et raison, source, coordonnées, jour de relance ; compte rendu des RDV ; table `journal` avec historique automatique ; table `objectifs` |
 | `2026-10-29_notifications.sql` | Table `push_abonnements` (appareils abonnés aux notifications) |
 | `2026-10-29_preferences_notifications.sql` | Colonne `membres.notifications` (notifications choisies dans Paramètres) |
+| `2026-10-30_siren_ou_siret.sql` | Le champ SIRET accepte aussi un SIREN (9 chiffres) |
 | `2026-10-29_installation_accompagnement.sql` | Étapes Installation (colonne `date_installation`) et Accompagnement (`date_accompagnement`), et leurs lignes dans l'historique |
 | `2026-10-29_equipements_devis.sql` | Quantités d'équipements du devis (iPad, imprimante, tiroir caisse, TPE, borne) et leur ligne dans l'historique |
 | `2026-10-29_menus.sql` | Espace de stockage privé « menus » (photos et PDF, 15 Mo max) et table `menu_fichiers` |

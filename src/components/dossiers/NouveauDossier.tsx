@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Entreprise } from "@/app/api/entreprises/route";
 import { creerDossier } from "@/app/actions/dossiers";
-import { fmtSiret } from "@/lib/dossiers";
+import { fmtSiret, memeEntreprise } from "@/lib/dossiers";
 import type { DossierInfos, Membre } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
@@ -47,7 +47,11 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  const suiviPar = (siret: string | null) => (siret ? existants.find((x) => x.siret === siret.replace(/\D/g, "")) : undefined);
+  /** Dossier déjà ouvert pour cette entreprise (SIREN ou SIRET, saisi ou choisi dans l'annuaire). */
+  const suiviPar = (siret: string | null) => {
+    const n = (siret ?? "").replace(/\D/g, "");
+    return n.length === 9 || n.length === 14 ? existants.find((x) => x.siret && memeEntreprise(x.siret, n)) : undefined;
+  };
   const doublon = suiviPar(infos.siret);
 
   /** Interroge l'annuaire 350 ms après la dernière lettre tapée. */
@@ -112,7 +116,7 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
     >
       <div className="max-w-xl">
         <label className="block">
-          <span className="mb-1.5 block text-[14px] font-semibold">Nom du restaurant ou SIRET</span>
+          <span className="mb-1.5 block text-[14px] font-semibold">Nom du restaurant, SIREN ou SIRET</span>
           <span className="relative block">
             <IconSearch className="pointer-events-none absolute top-3.5 left-3.5 size-5 text-muted" />
             <input
@@ -139,7 +143,7 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
             </p>
           )}
           {etat === "pret" && resultats?.length === 0 && (
-            <p className="text-muted">Aucune entreprise trouvée. Essaie avec la ville, ou le SIRET.</p>
+            <p className="text-muted">Aucune entreprise trouvée. Essaie avec la ville, le SIREN ou le SIRET.</p>
           )}
         </div>
 

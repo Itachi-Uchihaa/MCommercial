@@ -108,7 +108,7 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
             type="search"
             value={filtres.q}
             onChange={(e) => set({ q: e.target.value })}
-            placeholder="Restaurant, SIRET, gérant…"
+            placeholder="Restaurant, SIREN, gérant…"
             autoComplete="off"
             spellCheck={false}
             className="input rounded-2xl pl-11"

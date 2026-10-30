@@ -40,7 +40,8 @@ function infosValides(input: DossierInfos): DossierInfos {
   const mail = vide(input.mail);
   if (!restaurant) throw new Refus("Indique le nom du restaurant.");
   if (!input.commercial) throw new Refus("Choisis le commercial qui suit ce dossier.");
-  if (siret && siret.length !== 14) throw new Refus("Le SIRET doit faire 14 chiffres.");
+  if (siret && siret.length !== 9 && siret.length !== 14)
+    throw new Refus("Indique un SIREN (9 chiffres) ou un SIRET (14 chiffres).");
   if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new Refus("Cette adresse e-mail n’est pas valide. Vérifie-la.");
   if (input.source && !SOURCES.includes(input.source)) throw new Refus("Source du contact inconnue. Recharge la page et réessaie.");
   return {

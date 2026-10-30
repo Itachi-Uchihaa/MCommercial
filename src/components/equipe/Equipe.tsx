@@ -519,7 +519,7 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["Restaurant", (d) => d.restaurant],
     ["Commercial", (d) => d.commercial],
     ["Étape", etape],
-    ["SIRET", (d) => d.siret],
+    ["SIREN / SIRET", (d) => d.siret],
     ["Gérant", (d) => d.gerant],
     ["Téléphone", (d) => d.telephone],
     ["E-mail", (d) => d.mail],

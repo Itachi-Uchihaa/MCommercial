@@ -16,7 +16,7 @@ create table public.dossiers (
   id uuid primary key default gen_random_uuid(),
   commercial text not null,
   restaurant text not null check (length(trim(restaurant)) > 0),
-  siret text check (siret is null or siret ~ '^[0-9]{14}$'),
+  siret text check (siret is null or siret ~ '^([0-9]{9}|[0-9]{14})$'), -- SIREN ou SIRET
   mail text,
   devis_fait boolean not null default false,
   devis_accepte boolean not null default false,

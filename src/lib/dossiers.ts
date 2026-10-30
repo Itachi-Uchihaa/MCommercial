@@ -142,10 +142,18 @@ export const fmtDate = (d: string | null) =>
     ? new Date(`${d}T00:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })
     : "";
 
+/** SIREN (9 chiffres) : « 123 456 789 ». SIRET (14 chiffres) : « 123 456 789 01234 ». */
 export const fmtSiret = (s: string | null) =>
-  s ? s.replace(/^(\d{3})(\d{3})(\d{3})(\d{5})$/, "$1 $2 $3 $4") : "";
+  s ? s.replace(/^(\d{3})(\d{3})(\d{3})(\d{5})?$/, (_, a, b, c, d) => [a, b, c, d].filter(Boolean).join(" ")) : "";
 
-/** Formatage pendant la saisie : « 123 456 789 01234 ». */
+/** « SIREN » ou « SIRET » selon le nombre de chiffres enregistrés. */
+export const nomSiret = (s: string | null) => (s?.length === 9 ? "SIREN" : "SIRET");
+
+/** Même entreprise : numéros identiques, ou SIREN (9 chiffres) qui ouvre le SIRET de l'autre. */
+export const memeEntreprise = (a: string, b: string) =>
+  a === b || ((a.length === 9 || b.length === 9) && a.slice(0, 9) === b.slice(0, 9));
+
+/** Formatage pendant la saisie : « 123 456 789 » (SIREN) puis « 123 456 789 01234 » (SIRET). */
 export const maskSiret = (raw: string) => {
   const v = raw.replace(/\D/g, "").slice(0, 14);
   return [v.slice(0, 3), v.slice(3, 6), v.slice(6, 9), v.slice(9)].filter(Boolean).join(" ");

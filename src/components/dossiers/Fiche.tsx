@@ -16,6 +16,7 @@ import {
   estDatee,
   fmtDate,
   fmtSiret,
+  nomSiret,
   isDone,
   jourEtape,
   patchEtape,
@@ -429,7 +430,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 )}
               </Info>
               <Info label="Adresse">{d.adresse}</Info>
-              <Info label="SIRET">{d.siret && <span className="tabular-nums">{fmtSiret(d.siret)}</span>}</Info>
+              <Info label={nomSiret(d.siret)}>{d.siret && <span className="tabular-nums">{fmtSiret(d.siret)}</span>}</Info>
               <Info label="Activité">{d.activite}</Info>
               <Info label="Source">{d.source && SOURCES[d.source]}</Info>
               <Info label="Créé le">{fmtDate(parisDay(d.created_at))}</Info>

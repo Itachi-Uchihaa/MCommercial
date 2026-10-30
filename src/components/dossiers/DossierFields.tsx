@@ -94,12 +94,12 @@ export function DossierFields({ value: v, onChange, commerciaux, meNom, hideSire
 
       {!hideSiret && (
         <label className="mb-3 block">
-          <span className={label}>SIRET</span>
+          <span className={label}>SIREN ou SIRET</span>
           <input
             className="input"
             name="siret"
             inputMode="numeric"
-            placeholder="14 chiffres"
+            placeholder="9 ou 14 chiffres"
             value={maskSiret(v.siret ?? "")}
             onChange={(e) => onChange({ siret: e.target.value })}
             autoComplete="off"

@@ -103,6 +103,12 @@ export function derniereEtape(d: Dossier) {
   return { ...STEPS[n], jour: jourEtape(d, STEPS[n].key) };
 }
 
+/**
+ * « Commercial » des dossiers créés par la direction ou un admin sans commercial attitré.
+ * Ce n'est pas un compte : seuls les admins et directeurs peuvent l'attribuer.
+ */
+export const SUPPORT = "Support";
+
 export const SOURCES: Record<Source, string> = {
   terrain: "Prospection terrain",
   recommandation: "Recommandation",

@@ -22,6 +22,7 @@ import {
   patchEtape,
   peutSupprimer,
   prochaineEtape,
+  SUPPORT,
   telHref,
   villeDe,
 } from "@/lib/dossiers";
@@ -454,7 +455,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
         open={sheet.edit}
         sessionKey={sheet.key}
         dossier={d}
-        commerciaux={[...new Set([...equipe, d.commercial])]}
+        commerciaux={[...new Set([...equipe, ...(canAdmin ? [SUPPORT] : []), d.commercial])]}
         meNom={me.nom}
         onSupprimer={supprimable ? supprimer : undefined}
         onClose={() => setSheet((s) => ({ ...s, edit: false }))}

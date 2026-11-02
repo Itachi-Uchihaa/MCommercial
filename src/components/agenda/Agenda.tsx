@@ -15,6 +15,7 @@ import {
   mondayOf,
   type CommercialColor,
 } from "@/lib/agenda";
+import { SUPPORT } from "@/lib/dossiers";
 import { rdvPasse } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/client";
 import type { DossierLite, Membre, RendezVous, RendezVousInput } from "@/lib/types";
@@ -126,11 +127,11 @@ export function Agenda({
   const source = vue === "liste" ? liste : rdvs;
 
   const commerciaux = useMemo(() => {
-    // Commerciaux de l'équipe + anciens noms encore présents sur des RDV
-    const set = new Set(equipe);
+    // Commerciaux de l'équipe (+ « Support » pour la direction) + anciens noms encore présents sur des RDV
+    const set = new Set(canAdmin ? [...equipe, SUPPORT] : equipe);
     source.forEach((r) => set.add(r.commercial));
     return [...set];
-  }, [equipe, source]);
+  }, [canAdmin, equipe, source]);
 
   const upsertLocal = useCallback((row: RendezVous) => {
     const keep = inWeek(row.jour, weekRef.current);

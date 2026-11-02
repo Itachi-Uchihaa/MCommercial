@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Entreprise } from "@/app/api/entreprises/route";
 import { creerDossier } from "@/app/actions/dossiers";
-import { fmtSiret, memeEntreprise } from "@/lib/dossiers";
+import { SUPPORT, fmtSiret, memeEntreprise } from "@/lib/dossiers";
 import type { DossierInfos, Membre } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
@@ -19,7 +19,8 @@ type Props = { me: Membre; canAdmin: boolean; equipe: string[]; existants: Exist
 export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
   const router = useRouter();
   const live = useRealtimeRefresh(["dossiers"]);
-  const commerciaux = equipe.length ? equipe : [me.nom];
+  // La direction peut aussi mettre le dossier sur « Support » (choix par défaut si elle n'est pas commerciale)
+  const commerciaux = canAdmin ? [...equipe, SUPPORT] : equipe.length ? equipe : [me.nom];
   const [recherche, setRecherche] = useState("");
   const [resultats, setResultats] = useState<Entreprise[] | null>(null);
   const [etat, setEtat] = useState<"pret" | "recherche" | "erreur">("pret");
@@ -27,7 +28,7 @@ export function NouveauDossier({ me, canAdmin, equipe, existants }: Props) {
   const [manuel, setManuel] = useState(false);
   const [infos, setInfos] = useState<DossierInfos>({
     restaurant: "",
-    commercial: commerciaux.includes(me.nom) ? me.nom : commerciaux[0],
+    commercial: commerciaux.includes(me.nom) ? me.nom : canAdmin ? SUPPORT : commerciaux[0],
     siret: null,
     mail: null,
     telephone: null,

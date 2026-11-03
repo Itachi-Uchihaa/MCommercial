@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { IconCalendar, IconChart, IconFolder, IconSun, IconUsers } from "./icons";
+import { IconCalendar, IconChart, IconFolder, IconSun, IconUserCheck, IconUsers } from "./icons";
 
-export type Page = "aujourdhui" | "dossiers" | "clients" | "agenda" | "equipe";
+export type Page = "aujourdhui" | "dossiers" | "clients" | "agenda" | "equipe" | "presences";
 
 export const NAV: { key: Page; href: string; label: string; Icon: (p: { className?: string }) => React.ReactNode }[] = [
   { key: "aujourdhui", href: "/", label: "Aujourd’hui", Icon: IconSun },
@@ -10,6 +10,9 @@ export const NAV: { key: Page; href: string; label: string; Icon: (p: { classNam
   { key: "agenda", href: "/agenda", label: "Agenda", Icon: IconCalendar },
   { key: "equipe", href: "/equipe", label: "Équipe", Icon: IconChart },
 ];
+
+/** Hors des onglets du bas (5 au plus pour rester faciles à toucher) : menu de gauche et menu du compte. */
+export const PRESENCES = { key: "presences" as const, href: "/presences", label: "Présences", Icon: IconUserCheck };
 
 /** Onglets du bas (téléphone). Sans `page` : aucun onglet actif (écran de chargement). */
 export function TabBar({ page }: { page?: Page }) {

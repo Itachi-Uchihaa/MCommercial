@@ -79,7 +79,11 @@ const PALETTE = [
 
 export type CommercialColor = (typeof PALETTE)[number];
 
+/** « Support » (SUPPORT de lib/dossiers.ts, pas un compte) : noir, pour ne jamais prendre la couleur d'un commercial. */
+const NOIR_SUPPORT: CommercialColor = { bar: "#0f1733", soft: "#e6e8ef", ink: "#0f1733" };
+
 export function colorOf(nom: string, equipe: string[]): CommercialColor {
+  if (nom === "Support") return NOIR_SUPPORT;
   let i = equipe.indexOf(nom);
   if (i === -1) i = [...nom].reduce((h, c) => h + c.charCodeAt(0), 0);
   return PALETTE[i % PALETTE.length];

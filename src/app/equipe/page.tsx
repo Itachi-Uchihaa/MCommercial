@@ -6,7 +6,7 @@ import { debutDuMois } from "@/lib/dates";
 import { relancesDe } from "@/lib/relances";
 import { requireMembre, verifier } from "@/lib/session";
 import { PERIODES, bornes, statsEquipe, type Periode, type StatsEquipe } from "@/lib/stats";
-import type { Dossier, Objectif, RendezVous } from "@/lib/types";
+import type { Absence, Dossier, Objectif, RendezVous } from "@/lib/types";
 
 /** Pilotage de l'équipe. ?periode=semaine|mois|trimestre */
 export default function EquipePage({ searchParams }: PageProps<"/equipe">) {
@@ -27,12 +27,14 @@ async function Contenu({ searchParams }: Pick<PageProps<"/equipe">, "searchParam
   const debut = [lundi, ...PERIODES.map((p) => bornes(p.key, today).debut)].sort()[0];
   const depuis = addDays(debut, -180);
 
-  const [resDossiers, resRdvs, resObjectifs] = await Promise.all([
+  const [resDossiers, resRdvs, resObjectifs, resAbsences] = await Promise.all([
     supabase.from("dossiers").select("*").order("restaurant"),
     supabase.from("rendez_vous").select("*").gte("jour", depuis).lte("jour", addDays(lundi, 6)).order("jour").order("debut"),
     supabase.from("objectifs").select("*").gte("mois", `${today.slice(0, 4)}-01-01`).lte("mois", `${today.slice(0, 4)}-12-01`),
+    // Absences de cette semaine et des quatre suivantes
+    supabase.from("absences").select("*").gte("fin", lundi).lte("debut", addDays(lundi, 34)).order("debut"),
   ]);
-  verifier(resDossiers, resRdvs, resObjectifs);
+  verifier(resDossiers, resRdvs, resObjectifs, resAbsences);
   const dossiers = (resDossiers.data ?? []) as Dossier[];
   const rdvs = (resRdvs.data ?? []) as RendezVous[];
   const objectifs = (resObjectifs.data ?? []) as Objectif[];
@@ -58,6 +60,7 @@ async function Contenu({ searchParams }: Pick<PageProps<"/equipe">, "searchParam
       aRelancer={Object.fromEntries(commerciaux.map((c) => [c, relances.filter((r) => r.commercial === c).length]))}
       blocages={relancesDe({ dossiers, rdvs, today, nowTime, blocages: true })}
       semaine={rdvs.filter((r) => r.jour >= lundi)}
+      absences={(resAbsences.data ?? []) as Absence[]}
       objectifsDuMois={Object.fromEntries(objectifs.filter((o) => o.mois === mois).map((o) => [o.commercial, o.signatures]))}
       dossiers={dossiers}
     />

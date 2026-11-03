@@ -10,7 +10,6 @@ export type TypeNotif =
   | "devis_fait"
   | "signature"
   | "groupe_sav"
-  | "form"
   | "enrolement_tpe"
   | "installation"
   | "accompagnement"
@@ -34,7 +33,6 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
       { key: "devis_fait", label: "Devis envoyé" },
       { key: "signature", label: "Dossier signé" },
       { key: "groupe_sav", label: "Groupe SAV créé" },
-      { key: "form", label: "Form" },
       { key: "enrolement_tpe", label: "TPE enrôlé" },
       { key: "installation", label: "Installation datée" },
       { key: "accompagnement", label: "Accompagnement daté" },

@@ -58,7 +58,6 @@ const ACTION_ETAPE: Record<EtapeManuelle, string> = {
   devis_fait: "Marquer le devis envoyé",
   signature: "Marquer le dossier signé",
   groupe_sav: "Marquer le groupe SAV créé",
-  form: "Marquer le Form fait",
   enrolement_tpe: "Marquer le TPE enrôlé",
 };
 

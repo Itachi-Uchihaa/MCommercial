@@ -602,7 +602,6 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["Devis envoyé le", (d) => jour(d.devis_fait_le)],
     ["Signé le", (d) => jour(d.signature_le)],
     ["Groupe SAV créé le", (d) => jour(d.groupe_sav_le)],
-    ["Form le", (d) => jour(d.form_le)],
     ["TPE enrôlé le", (d) => jour(d.enrolement_tpe_le)],
     ["Installation le", (d) => d.date_installation],
     ["Accompagnement le", (d) => d.date_accompagnement],

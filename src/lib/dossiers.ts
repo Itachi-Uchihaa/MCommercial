@@ -8,7 +8,6 @@ export const STEPS: { key: StepKey; court: string; long: string }[] = [
   { key: "devis_fait", court: "Devis", long: "Devis envoyé" },
   { key: "signature", court: "Signé", long: "Signé" },
   { key: "groupe_sav", court: "SAV", long: "Groupe SAV créé" },
-  { key: "form", court: "Form", long: "Form" },
   { key: "enrolement_tpe", court: "TPE", long: "TPE enrôlé" },
   { key: "installation", court: "Install.", long: "Installation" },
   { key: "accompagnement", court: "Accomp.", long: "Accompagnement" },
@@ -28,13 +27,12 @@ export function datePrevue(d: Dossier, key: EtapeDatee) {
   return jour && jour > todayParis() ? jour : null;
 }
 
-export const ETAPES_MANUELLES: EtapeManuelle[] = ["devis_fait", "signature", "groupe_sav", "form", "enrolement_tpe"];
+export const ETAPES_MANUELLES: EtapeManuelle[] = ["devis_fait", "signature", "groupe_sav", "enrolement_tpe"];
 
 const DATE_ETAPE = {
   devis_fait: "devis_fait_le",
   signature: "signature_le",
   groupe_sav: "groupe_sav_le",
-  form: "form_le",
   enrolement_tpe: "enrolement_tpe_le",
 } as const;
 
@@ -93,7 +91,6 @@ export const FILTRES_ETAPE: { key: FiltreEtape; label: string }[] = [
   { key: "devis_fait", label: "Devis" },
   { key: "signature", label: "Signés" },
   { key: "groupe_sav", label: "SAV" },
-  { key: "form", label: "Form" },
   { key: "enrolement_tpe", label: "TPE" },
   { key: "installation", label: "Installés" },
   { key: "accompagnement", label: "Accompagnés" },

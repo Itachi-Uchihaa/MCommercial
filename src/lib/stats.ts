@@ -107,7 +107,7 @@ export function statsEquipe({
     delaiMoyen: delais.length ? Math.round(somme(delais) / delais.length) : null,
     /** Dossiers arrivés au bout du parcours (TPE enrôlé) sur la période. */
     tpe: tpe.length,
-    /** Signés dont le TPE n'est pas encore enrôlé (groupe SAV, Form ou TPE à faire). */
+    /** Signés dont le TPE n'est pas encore enrôlé (groupe SAV ou TPE à faire). */
     enAttenteTpe: dossiers.filter((d) => !d.perdu_le && d.signature && !d.enrolement_tpe).length,
     // Une ligne par étape : dossiers qui l'ont franchie sur la période
     entonnoir: STEPS.map((s) => ({ label: ENTONNOIR[s.key], n: dossiers.filter((d) => dans(jourEtape(d, s.key), b)).length })),
@@ -125,7 +125,6 @@ const ENTONNOIR: Record<StepKey, string> = {
   devis_fait: "Devis envoyés",
   signature: "Signés",
   groupe_sav: "Groupe SAV",
-  form: "Form",
   enrolement_tpe: "TPE enrôlés",
   installation: "Installés",
   accompagnement: "Accompagnés",

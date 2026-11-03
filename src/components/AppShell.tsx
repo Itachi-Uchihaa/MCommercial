@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Membre } from "@/lib/types";
 import { IconChevronLeft, IconPlus } from "./icons";
 import { McaisseLogo, McaisseMark } from "./McaisseLogo";
-import { NAV, TabBar, type Page } from "./navigation";
+import { NAV, PRESENCES, TabBar, type Page } from "./navigation";
 import { SignOutButton } from "./SignOutButton";
 
 export type { Page };
@@ -36,7 +36,7 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
           <McaisseLogo suffix="Suivi" />
         </Link>
         <nav aria-label="Navigation principale" className="flex flex-col gap-1">
-          {NAV.map(({ key, href, label, Icon }) => (
+          {[...NAV, PRESENCES].map(({ key, href, label, Icon }) => (
             <Link
               key={key}
               href={href}
@@ -179,6 +179,10 @@ function AccountMenu({ me, canAdmin, live }: { me: Membre; canAdmin: boolean; li
               {live ? "En direct" : "Connexion…"}
             </span>
           </div>
+          <Link href={PRESENCES.href} className="flex min-h-12 items-center gap-2.5 border-b border-line px-3.5 text-[15px]">
+            <PRESENCES.Icon className="size-5 text-brand" />
+            {PRESENCES.label}
+          </Link>
           <Link href="/parametres" className="flex min-h-12 items-center border-b border-line px-3.5 text-[15px]">
             Paramètres
           </Link>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { mapsUrl } from "@/lib/agenda";
+import { colorOf, mapsUrl } from "@/lib/agenda";
 import { STEPS, niveau, telHref, villeDe } from "@/lib/dossiers";
 import type { Dossier, Membre } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
@@ -52,11 +52,13 @@ function syncUrl({ statut, q }: Filtres) {
 type Props = {
   me: Membre;
   canAdmin: boolean;
+  /** Prénoms des commerciaux, dans l'ordre (couleur de chacun). */
+  equipe: string[];
   dossiers: Dossier[];
   initial: { statut: string; q: string };
 };
 
-export function Clients({ me, canAdmin, dossiers, initial }: Props) {
+export function Clients({ me, canAdmin, equipe, dossiers, initial }: Props) {
   const live = useRealtimeRefresh(["dossiers"]);
   const [filtres, setFiltres] = useState<Filtres>({
     statut: FILTRES.some((f) => f.key === initial.statut) ? (initial.statut as Filtres["statut"]) : "tous",
@@ -147,7 +149,7 @@ export function Clients({ me, canAdmin, dossiers, initial }: Props) {
           </h2>
           <ul className="card overflow-hidden">
             {liste.map((d, i) => (
-              <ClientLigne key={d.id} d={d} premier={i === 0} />
+              <ClientLigne key={d.id} d={d} equipe={equipe} premier={i === 0} />
             ))}
           </ul>
         </section>
@@ -174,9 +176,10 @@ export function Clients({ me, canAdmin, dossiers, initial }: Props) {
 const RACCOURCI = "grid size-11 flex-none place-items-center rounded-full bg-canvas text-brand";
 
 /** Une ligne du carnet : la fiche s'ouvre en touchant le nom, les raccourcis appellent ou ouvrent l'itinéraire. */
-function ClientLigne({ d, premier }: { d: Dossier; premier: boolean }) {
+function ClientLigne({ d, equipe, premier }: { d: Dossier; equipe: string[]; premier: boolean }) {
   const statut = statutDe(d);
-  const details = [d.gerant, villeDe(d.adresse), d.commercial && `Suivi par ${d.commercial}`].filter(Boolean).join(" · ");
+  const details = [d.gerant, villeDe(d.adresse)].filter(Boolean).join(" · ");
+  const couleur = colorOf(d.commercial, equipe);
 
   return (
     <li className={`flex items-center gap-1 pr-2.5 ${premier ? "" : "border-t border-line"}`}>
@@ -185,12 +188,22 @@ function ClientLigne({ d, premier }: { d: Dossier; premier: boolean }) {
           {d.restaurant.trim().charAt(0).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
-          {/* Nom en entier (deux lignes au plus), statut sur la ligne des détails */}
+          {/* Nom en entier (deux lignes au plus) ; statut et commercial jamais coupés, seuls les détails le sont */}
           <span className="line-clamp-2 font-semibold break-words">{d.restaurant}</span>
           <span className="mt-0.5 flex items-center gap-1.5">
             <span className={`flex-none rounded-full px-2 py-0.5 text-[11.5px] font-bold ${BADGE[statut].className}`}>
               {BADGE[statut].label}
             </span>
+            {d.commercial && (
+              <span
+                className="flex flex-none items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-bold"
+                style={{ background: couleur.soft, color: couleur.ink }}
+              >
+                <span aria-hidden className="size-1.5 rounded-full" style={{ background: couleur.bar }} />
+                <span className="sr-only">Suivi par </span>
+                {d.commercial}
+              </span>
+            )}
             {details && <span className="min-w-0 truncate text-[13px] text-muted">{details}</span>}
           </span>
         </span>

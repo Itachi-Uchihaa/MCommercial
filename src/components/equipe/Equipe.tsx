@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { enregistrerObjectifs } from "@/app/actions/objectifs";
-import { RDV_TYPES, addDays, colorOf, fmtHeure, mondayOf } from "@/lib/agenda";
+import { MOTIFS, absenceDe, fmtPeriode, periodesContinues } from "@/lib/absences";
+import { RDV_TYPES, addDays, colorOf, fmtHeure, fmtJourCourt, mondayOf } from "@/lib/agenda";
 import { deMois, debutDuMois, parisDay } from "@/lib/dates";
 import { EQUIPEMENTS, RAISONS_PERTE, SOURCES, etapeDe, FILTRES_ETAPE } from "@/lib/dossiers";
 import type { Relance } from "@/lib/relances";
 import { PERIODES, type Periode, type StatsEquipe } from "@/lib/stats";
-import type { Dossier, Membre, RendezVous } from "@/lib/types";
+import type { Absence, Dossier, Membre, RendezVous } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { BottomSheet, useUnsavedGuard } from "../BottomSheet";
@@ -31,6 +32,8 @@ type Props = {
   blocages: Relance[];
   /** RDV de la semaine en cours. */
   semaine: RendezVous[];
+  /** Absences de cette semaine et des quatre suivantes. */
+  absences: Absence[];
   objectifsDuMois: Record<string, number>;
   /** Tous les dossiers, pour l'export CSV. */
   dossiers: Dossier[];
@@ -50,7 +53,7 @@ const jourCourt = (day: string) => {
 };
 
 export function Equipe(props: Props) {
-  const { me, canAdmin, equipe, today, nowTime, stats, aRelancer, blocages, semaine, objectifsDuMois, dossiers } = props;
+  const { me, canAdmin, equipe, today, nowTime, stats, aRelancer, blocages, semaine, absences, objectifsDuMois, dossiers } = props;
   const [periode, setPeriodeState] = useState(props.periode);
   const s = stats[periode];
   // Garde la période dans l'adresse (rechargement, lien partagé) sans recharger la page
@@ -58,7 +61,7 @@ export function Equipe(props: Props) {
     setPeriodeState(p);
     window.history.replaceState(null, "", p === "mois" ? "/equipe" : `/equipe?periode=${p}`);
   };
-  const live = useRealtimeRefresh(["dossiers", "rendez_vous", "objectifs"]);
+  const live = useRealtimeRefresh(["dossiers", "rendez_vous", "objectifs", "absences"]);
   const [objectifs, setObjectifs] = useState({ open: false, key: 0 });
   const { toast, showToast } = useToast();
 
@@ -69,6 +72,15 @@ export function Equipe(props: Props) {
   const commerciaux = s.parCommercial.map((c) => c.nom);
   const duJour = semaine.filter((r) => r.jour === today);
   const max = Math.max(1, ...s.entonnoir.map((e) => e.n));
+
+  // Présences : absences de la semaine (lundi à vendredi), puis celles des quatre semaines suivantes
+  const vendredi = addDays(lundi, 4);
+  const periodes = periodesContinues(absences);
+  const absCetteSemaine = periodes.filter((p) => p.debut <= vendredi && p.fin >= lundi);
+  const absEnsuite = periodes.filter((p) => p.debut > vendredi).slice(0, 4);
+  const nbAbsents = new Set(absCetteSemaine.map((p) => p.commercial)).size;
+  /** Période d'absence (continue) qui couvre ce jour pour ce commercial. */
+  const periodeDuJour = (c: string, jour: string) => periodes.find((p) => p.commercial === c && p.debut <= jour && jour <= p.fin);
 
   return (
     <AppShell
@@ -102,6 +114,29 @@ export function Equipe(props: Props) {
           Exporter les dossiers en CSV
         </button>
       </div>
+
+      <section aria-labelledby="presences" className="card mt-4 p-4 lg:p-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+          <h2 id="presences" className="text-[17px] font-bold">
+            Présences cette semaine
+          </h2>
+          <Link href="/presences" className="flex min-h-11 items-center text-[14px] font-bold text-brand">
+            Voir le détail
+          </Link>
+        </div>
+        <p className={`text-[14px] ${nbAbsents ? "text-muted" : "font-semibold text-ok-ink"}`}>
+          {nbAbsents
+            ? `${equipe.length - nbAbsents} sur ${equipe.length} là toute la semaine · ${nbAbsents} absent${nbAbsents > 1 ? "s" : ""}`
+            : "Toute l’équipe est là cette semaine."}
+        </p>
+        {absCetteSemaine.length > 0 && <ListeAbsences periodes={absCetteSemaine} equipe={equipe} today={today} />}
+        {absEnsuite.length > 0 && (
+          <>
+            <h3 className="mt-3.5 text-[13px] font-bold tracking-wider text-muted uppercase">Ensuite</h3>
+            <ListeAbsences periodes={absEnsuite} equipe={equipe} today={today} />
+          </>
+        )}
+      </section>
 
       <div className="mt-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-4">
         <Tuile titre="Signés">
@@ -142,6 +177,7 @@ export function Equipe(props: Props) {
             {commerciaux.map((c, i) => {
               const siens = duJour.filter((r) => r.commercial === c);
               const prochain = siens.find((r) => r.jour > today || fmtHeure(r.fin) > nowTime) ?? null;
+              const absent = siens.length === 0 ? periodeDuJour(c, today) : undefined;
               return (
                 <li key={c} className={i ? "border-t border-line" : ""}>
                   <Link href={`/agenda?commercial=${encodeURIComponent(c)}`} className="flex min-h-16 items-center gap-3 py-2 pr-3.5 pl-4">
@@ -151,8 +187,10 @@ export function Equipe(props: Props) {
                         {c}
                         {siens.length > 0 && ` · ${siens.length} RDV`}
                       </span>
-                      <span className={`block text-[13px] ${siens.length ? "text-muted" : "font-semibold text-warn"}`}>
-                        {!siens.length
+                      <span className={`block text-[13px] ${siens.length || absent ? "text-muted" : "font-semibold text-warn"}`}>
+                        {absent
+                          ? `Pas là aujourd’hui · ${MOTIFS[absent.motifs[0]].label}${absent.fin > today ? `, jusqu’au ${fmtJourCourt(absent.fin)}` : ""}`
+                          : !siens.length
                           ? "Aucun RDV aujourd’hui"
                           : prochain
                             ? `Prochain ${fmtHeure(prochain.debut)} · ${RDV_TYPES[prochain.type]}, ${prochain.restaurant}`
@@ -311,12 +349,13 @@ export function Equipe(props: Props) {
                   {jours.map((j) => {
                     const siens = semaine.filter((r) => r.commercial === c && r.jour === j);
                     const color = colorOf(c, equipe);
+                    const absence = siens.length ? undefined : absenceDe(absences, c, j);
                     return (
                       <td
                         key={j}
-                        className={`rounded-[10px] p-2 align-top ${siens.length ? "" : "border-[1.5px] border-dashed border-[#d5d8e0] text-muted"} ${
-                          j === today ? "ring-[1.5px] ring-brand ring-inset" : ""
-                        }`}
+                        className={`rounded-[10px] p-2 align-top ${
+                          siens.length ? "" : absence ? `font-bold ${MOTIFS[absence.motif].className}` : "border-[1.5px] border-dashed border-[#d5d8e0] text-muted"
+                        } ${j === today ? "ring-[1.5px] ring-brand ring-inset" : ""}`}
                         style={siens.length ? { background: color.soft, color: color.ink } : undefined}
                       >
                         {siens.length
@@ -325,7 +364,9 @@ export function Equipe(props: Props) {
                                 {fmtHeure(r.debut)} {RDV_TYPES[r.type]}
                               </span>
                             ))
-                          : "Libre"}
+                          : absence
+                            ? MOTIFS[absence.motif].label
+                            : "Libre"}
                       </td>
                     );
                   })}
@@ -377,6 +418,37 @@ export function Equipe(props: Props) {
       )}
       <Toast message={toast} />
     </AppShell>
+  );
+}
+
+/** Absences regroupées par période continue : « Rayan · École · lun. 3 nov. → mer. 5 nov. ». */
+function ListeAbsences({
+  periodes,
+  equipe,
+  today,
+}: {
+  periodes: ReturnType<typeof periodesContinues>;
+  equipe: string[];
+  today: string;
+}) {
+  return (
+    <ul className="mt-2 flex flex-col gap-1.5">
+      {periodes.map((p) => (
+        <li key={`${p.commercial}-${p.debut}`} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[14px]">
+          <span aria-hidden className="size-2.5 flex-none rounded-full" style={{ background: colorOf(p.commercial, equipe).bar }} />
+          <b>{p.commercial}</b>
+          {p.motifs.map((m) => (
+            <span key={m} className={`rounded-full px-2 py-0.5 text-[11.5px] font-bold ${MOTIFS[m].className}`}>
+              {MOTIFS[m].label}
+            </span>
+          ))}
+          <span className="text-muted">
+            {fmtPeriode(p.debut, p.fin)}
+            {p.debut <= today && p.fin >= today && " · en ce moment"}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

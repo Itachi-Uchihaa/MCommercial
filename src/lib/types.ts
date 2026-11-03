@@ -83,6 +83,22 @@ export type JournalEntry = {
 
 export type Objectif = { commercial: string; mois: string; signatures: number };
 
+export type MotifAbsence = "ecole" | "conges" | "autre";
+
+/** Absence d'un commercial, du jour `debut` au jour `fin` inclus (AAAA-MM-JJ). */
+export type Absence = {
+  id: string;
+  commercial: string;
+  debut: string;
+  fin: string;
+  motif: MotifAbsence;
+  note: string | null;
+  /** Même valeur pour les absences créées ensemble par une répétition (ex. école chaque lundi). */
+  serie: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type RdvType = "decouverte" | "demo" | "signature" | "installation" | "relance" | "autre";
 export type ResultatRdv = "positif" | "a_relancer" | "pas_interesse";
 export type SuiteRdv = "devis" | "nouveau_rdv" | "rien";

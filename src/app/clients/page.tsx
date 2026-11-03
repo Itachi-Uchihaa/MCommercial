@@ -14,7 +14,7 @@ export default function ClientsPage({ searchParams }: PageProps<"/clients">) {
 }
 
 async function Contenu({ searchParams }: Pick<PageProps<"/clients">, "searchParams">) {
-  const { supabase, me, canAdmin } = await requireMembre();
+  const { supabase, me, canAdmin, equipe } = await requireMembre();
   const sp = await searchParams;
 
   const res = await supabase.from("dossiers").select("*").order("restaurant");
@@ -26,6 +26,7 @@ async function Contenu({ searchParams }: Pick<PageProps<"/clients">, "searchPara
       key={JSON.stringify([sp.statut, sp.q])}
       me={me}
       canAdmin={canAdmin}
+      equipe={equipe}
       dossiers={(res.data ?? []) as Dossier[]}
       initial={{ statut: typeof sp.statut === "string" ? sp.statut : "tous", q: typeof sp.q === "string" ? sp.q : "" }}
     />

@@ -61,6 +61,9 @@ export function jourEtape(d: Dossier, key: StepKey): string | null {
   return ts ? parisDay(ts) : null;
 }
 
+/** En cours : ni perdu, ni terminé (accompagnement fait, dernière étape du parcours). */
+export const enCours = (d: Dossier) => !d.perdu_le && !isDone(d, "accompagnement");
+
 /** Index de l'étape cochée la plus avancée (-1 : aucune). */
 export function niveau(d: Dossier) {
   let n = -1;
@@ -79,8 +82,12 @@ export function etapeDe(d: Dossier): Etape {
   return n < 0 ? "prospect" : STEPS[n].key;
 }
 
-export const FILTRES_ETAPE: { key: Etape | "tous"; label: string }[] = [
+/** Filtre de la liste : une étape, tous (sauf perdus) ou en cours (ni perdus ni terminés). */
+export type FiltreEtape = Etape | "tous" | "en_cours";
+
+export const FILTRES_ETAPE: { key: FiltreEtape; label: string }[] = [
   { key: "tous", label: "Tous" },
+  { key: "en_cours", label: "En cours" },
   { key: "prospect", label: "Prospects" },
   { key: "rdv", label: "RDV faits" },
   { key: "devis_fait", label: "Devis" },

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Chargement } from "@/components/Chargement";
 import { DossiersList } from "@/components/dossiers/DossiersList";
 import { addDays } from "@/lib/agenda";
-import { FILTRES_ETAPE, type Etape } from "@/lib/dossiers";
+import { FILTRES_ETAPE, type FiltreEtape } from "@/lib/dossiers";
 import { rdvPasse, relancesDe } from "@/lib/relances";
 import { requireMembre, verifier } from "@/lib/session";
 import type { Dossier, RendezVous } from "@/lib/types";
@@ -39,7 +39,7 @@ async function Contenu({ searchParams }: Pick<PageProps<"/dossiers">, "searchPar
     if (r.dossierId && !relances[r.dossierId]) relances[r.dossierId] = r.motif;
   }
 
-  const etape = FILTRES_ETAPE.some((f) => f.key === sp.etape) ? (sp.etape as Etape) : "tous";
+  const etape = FILTRES_ETAPE.some((f) => f.key === sp.etape) ? (sp.etape as FiltreEtape) : "tous";
   const commercial =
     typeof sp.commercial === "string" ? sp.commercial : me.role === "commercial" ? me.nom : "Tous";
 

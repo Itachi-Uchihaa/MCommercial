@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Membre } from "@/lib/types";
+import { useDossiersEnCours } from "@/lib/useDossiersEnCours";
 import { IconChevronLeft, IconPlus } from "./icons";
 import { McaisseLogo, McaisseMark } from "./McaisseLogo";
-import { NAV, PRESENCES, TabBar, type Page } from "./navigation";
+import { NAV, PRESENCES, TabBar, libelleBadge, type Badges, type Page } from "./navigation";
 import { SignOutButton } from "./SignOutButton";
 
 export type { Page };
@@ -29,6 +30,7 @@ type Props = {
 
 /** Cadre des écrans : onglets en bas sur téléphone, menu latéral sur ordinateur. */
 export function AppShell({ me, canAdmin, live, page, title, subtitle, action, back, children }: Props) {
+  const badges: Badges = { dossiers: useDossiersEnCours(me) };
   return (
     <div className="lg:flex">
       <aside className="sticky top-0 hidden h-dvh w-60 flex-none flex-col border-r border-line bg-white px-3 py-6 lg:flex">
@@ -36,19 +38,33 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
           <McaisseLogo suffix="Suivi" />
         </Link>
         <nav aria-label="Navigation principale" className="flex flex-col gap-1">
-          {[...NAV, PRESENCES].map(({ key, href, label, Icon }) => (
-            <Link
-              key={key}
-              href={href}
-              aria-current={key === page ? "page" : undefined}
-              className={`flex min-h-11 items-center gap-2.5 rounded-xl px-3 font-semibold ${
-                key === page ? "bg-brand-soft text-brand-ink" : "text-ink-soft hover:bg-canvas"
-              }`}
-            >
-              <Icon className="size-5" />
-              {label}
-            </Link>
-          ))}
+          {[...NAV, PRESENCES].map(({ key, href, label, Icon }) => {
+            const n = badges[key];
+            return (
+              <Link
+                key={key}
+                href={href}
+                aria-current={key === page ? "page" : undefined}
+                className={`flex min-h-11 items-center gap-2.5 rounded-xl px-3 font-semibold ${
+                  key === page ? "bg-brand-soft text-brand-ink" : "text-ink-soft hover:bg-canvas"
+                }`}
+              >
+                <Icon className="size-5" />
+                <span className="flex-1">{label}</span>
+                {!!n && (
+                  <span
+                    title={libelleBadge(key, n)}
+                    className={`min-w-6 rounded-full px-2 py-0.5 text-center text-[12.5px] font-bold tabular-nums ${
+                      key === page ? "bg-brand text-white" : "bg-canvas text-ink-soft"
+                    }`}
+                  >
+                    {n}
+                    <span className="sr-only"> en cours</span>
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
         <div className="mt-auto flex flex-col gap-1 border-t border-line pt-3">
           <p className="flex items-center gap-2 px-3 pb-1 text-[13px] text-muted">
@@ -104,7 +120,7 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
         />
       )}
 
-      <TabBar page={page} />
+      <TabBar page={page} badges={badges} />
     </div>
   );
 }

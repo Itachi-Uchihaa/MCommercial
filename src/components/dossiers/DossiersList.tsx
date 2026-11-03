@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FILTRES_ETAPE, etapeDe, type Etape } from "@/lib/dossiers";
+import { FILTRES_ETAPE, enCours, etapeDe, type FiltreEtape } from "@/lib/dossiers";
 import type { Dossier, Membre, RendezVous } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { IconSearch } from "../icons";
 import { DossierCard } from "./DossierCard";
 
-type Filtres = { etape: Etape | "tous"; commercial: string; q: string };
+type Filtres = { etape: FiltreEtape; commercial: string; q: string };
 
 type Props = {
   me: Membre;
@@ -53,11 +53,12 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
   );
 
   const compte = useMemo(() => {
-    const c: Record<string, number> = { tous: 0 };
+    const c: Record<string, number> = { tous: 0, en_cours: 0 };
     for (const d of scope) {
       const e = etapeDe(d);
       c[e] = (c[e] ?? 0) + 1;
       if (e !== "perdu") c.tous += 1;
+      if (enCours(d)) c.en_cours = (c.en_cours ?? 0) + 1;
     }
     return c;
   }, [scope]);
@@ -67,7 +68,9 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
     return scope
       .filter((d) => {
         const e = etapeDe(d);
-        return filtres.etape === "tous" ? e !== "perdu" : e === filtres.etape;
+        if (filtres.etape === "tous") return e !== "perdu";
+        if (filtres.etape === "en_cours") return enCours(d);
+        return e === filtres.etape;
       })
       .filter(
         (d) =>
@@ -78,6 +81,7 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
   }, [scope, filtres.etape, filtres.q, relances]);
 
   const aRelancer = scope.filter((d) => relances[d.id]).length;
+  const nbEnCours = compte.en_cours;
   const filtre = filtres.etape !== "tous" || filtres.q.trim() !== "";
 
   return (
@@ -89,7 +93,9 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
       title="Dossiers"
       subtitle={
         <>
-          {compte.tous} en cours
+          <b className="font-bold text-ink">
+            {nbEnCours} dossier{nbEnCours > 1 ? "s" : ""} en cours
+          </b>
           {aRelancer > 0 && (
             <>
               {" · "}

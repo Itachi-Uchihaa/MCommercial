@@ -140,7 +140,6 @@ export type StepKey =
   | "devis_fait"
   | "signature"
   | "groupe_sav"
-  | "form"
   | "enrolement_tpe"
   | "installation"
   | "accompagnement";

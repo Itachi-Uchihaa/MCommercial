@@ -1,10 +1,11 @@
 import { addDays, fmtJourCourt } from "@/lib/agenda";
 import type { Absence, MotifAbsence } from "@/lib/types";
 
-export const MOTIFS: Record<MotifAbsence, { label: string; className: string }> = {
-  ecole: { label: "École", className: "bg-[#f3e8ff] text-[#6a1fb0]" },
-  conges: { label: "Congés", className: "bg-warn-soft text-warn" },
-  autre: { label: "Absence", className: "bg-[#e6e8ef] text-ink-soft" },
+/** `court` : libellé des cases de la grille sur téléphone, où une case n'a qu'environ 37 px à 360 px de large (« Absence » en prend 54). */
+export const MOTIFS: Record<MotifAbsence, { label: string; court: string; className: string }> = {
+  ecole: { label: "École", court: "École", className: "bg-[#f3e8ff] text-[#6a1fb0]" },
+  conges: { label: "Congés", court: "Cong.", className: "bg-warn-soft text-warn" },
+  autre: { label: "Absence", court: "Abs.", className: "bg-[#e6e8ef] text-ink-soft" },
 };
 
 export const MOTIF_KEYS = Object.keys(MOTIFS) as MotifAbsence[];

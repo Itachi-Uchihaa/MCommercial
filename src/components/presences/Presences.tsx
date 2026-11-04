@@ -55,6 +55,20 @@ const jourCourt = (day: string) => {
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
+/** Motif en toutes lettres, abrégé sur téléphone pour tenir dans sa case (le lecteur d'écran lit toujours le mot entier). */
+function Motif({ motif }: { motif: MotifAbsence }) {
+  const { label, court } = MOTIFS[motif];
+  if (court === label) return label;
+  return (
+    <>
+      <span aria-hidden className="sm:hidden">
+        {court}
+      </span>
+      <span className="max-sm:sr-only">{label}</span>
+    </>
+  );
+}
+
 export function Presences({ me, canAdmin, equipe, today, depuis, initialWeek, absences }: Props) {
   const router = useRouter();
   const live = useRealtimeRefresh(["absences"]);
@@ -147,7 +161,7 @@ export function Presences({ me, canAdmin, equipe, today, depuis, initialWeek, ab
           <table className="w-full table-fixed border-separate border-spacing-1 text-[12.5px]">
             <thead>
               <tr className="text-muted">
-                <th scope="col" className="w-[86px] px-1 text-left font-bold lg:w-36">
+                <th scope="col" className="w-20 px-1 text-left font-bold sm:w-[86px] lg:w-36">
                   <span className="sr-only">Commercial</span>
                 </th>
                 {jours.map((j) => (
@@ -173,11 +187,11 @@ export function Presences({ me, canAdmin, equipe, today, depuis, initialWeek, ab
                     return (
                       <td
                         key={j}
-                        className={`h-11 rounded-[10px] px-0.5 text-center font-bold ${
+                        className={`h-11 rounded-[10px] text-center font-bold max-sm:text-[11.5px] sm:px-0.5 ${
                           a ? MOTIFS[a.motif].className : "bg-ok-soft text-ok-ink"
                         } ${j === today ? "ring-[1.5px] ring-brand ring-inset" : ""}`}
                       >
-                        {a ? MOTIFS[a.motif].label : "Là"}
+                        {a ? <Motif motif={a.motif} /> : "Là"}
                       </td>
                     );
                   })}
@@ -192,7 +206,9 @@ export function Presences({ me, canAdmin, equipe, today, depuis, initialWeek, ab
           </span>
           {MOTIF_KEYS.map((m) => (
             <span key={m}>
-              <b className={MOTIFS[m].className.split(" ").find((c) => c.startsWith("text-"))}>{MOTIFS[m].label}</b>
+              <b className={MOTIFS[m].className.split(" ").find((c) => c.startsWith("text-"))}>
+                <Motif motif={m} />
+              </b>
               {m === "ecole" ? " : alternance" : m === "conges" ? " : congés" : " : autre raison"}
             </span>
           ))}

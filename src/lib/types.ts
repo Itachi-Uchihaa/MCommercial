@@ -48,9 +48,13 @@ export type Dossier = {
   rdv_le: string | null;
   /** Équipements du devis : quantités (0 à 99). */
   devis_ipad: number;
-  devis_imprimante: number;
+  devis_imprimante_saga: number;
+  devis_imprimante_epson: number;
   devis_tiroir_caisse: number;
-  devis_tpe: number;
+  devis_monnayeur: number;
+  devis_tpe_smile: number;
+  devis_tpe_mpay: number;
+  devis_tpe_borne: number;
   devis_borne: number;
   perdu_le: string | null;
   raison_perte: RaisonPerte | null;
@@ -132,7 +136,18 @@ export type RendezVousInput = Omit<
 >;
 
 /** Quantités d'équipements prévues au devis. */
-export type Equipements = Pick<Dossier, "devis_ipad" | "devis_imprimante" | "devis_tiroir_caisse" | "devis_tpe" | "devis_borne">;
+export type Equipements = Pick<
+  Dossier,
+  | "devis_ipad"
+  | "devis_imprimante_saga"
+  | "devis_imprimante_epson"
+  | "devis_tiroir_caisse"
+  | "devis_monnayeur"
+  | "devis_tpe_smile"
+  | "devis_tpe_mpay"
+  | "devis_tpe_borne"
+  | "devis_borne"
+>;
 
 /** Étapes affichées sur chaque carte, dans l'ordre du parcours commercial. */
 export type StepKey =

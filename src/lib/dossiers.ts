@@ -185,19 +185,21 @@ export const telHref = (tel: string) => `tel:${tel.replace(/[^\d+]/g, "")}`;
 export const peutSupprimer = (me: { role: string; nom: string }, d: { commercial: string }) =>
   me.role !== "commercial" || d.commercial === me.nom;
 
-/** Équipements proposés au devis, dans l'ordre d'affichage (« pluriel » pour le résumé). */
-export const EQUIPEMENTS: { key: keyof Equipements; label: string; pluriel: string }[] = [
-  { key: "devis_ipad", label: "iPad", pluriel: "iPad" },
-  { key: "devis_imprimante", label: "Imprimante", pluriel: "imprimantes" },
-  { key: "devis_tiroir_caisse", label: "Tiroir caisse", pluriel: "tiroirs caisse" },
-  { key: "devis_tpe", label: "TPE", pluriel: "TPE" },
-  { key: "devis_borne", label: "Borne", pluriel: "bornes" },
+/** Équipements proposés au devis, dans l'ordre d'affichage (« un » et « pluriel » pour le résumé). */
+export const EQUIPEMENTS: { key: keyof Equipements; label: string; un: string; pluriel: string }[] = [
+  { key: "devis_ipad", label: "iPad", un: "iPad", pluriel: "iPad" },
+  { key: "devis_imprimante_saga", label: "Imprimante Saga", un: "imprimante Saga", pluriel: "imprimantes Saga" },
+  { key: "devis_imprimante_epson", label: "Imprimante Epson", un: "imprimante Epson", pluriel: "imprimantes Epson" },
+  { key: "devis_tiroir_caisse", label: "Tiroir caisse", un: "tiroir caisse", pluriel: "tiroirs caisse" },
+  { key: "devis_monnayeur", label: "Monnayeur", un: "monnayeur", pluriel: "monnayeurs" },
+  { key: "devis_tpe_smile", label: "TPE Smile", un: "TPE Smile", pluriel: "TPE Smile" },
+  { key: "devis_tpe_mpay", label: "TPE MPay", un: "TPE MPay", pluriel: "TPE MPay" },
+  { key: "devis_tpe_borne", label: "TPE borne", un: "TPE borne", pluriel: "TPE borne" },
+  { key: "devis_borne", label: "Borne", un: "borne", pluriel: "bornes" },
 ];
 
-/** « 2 iPad · 1 imprimante · 1 TPE » (null si rien n'est prévu). */
+/** « 2 iPad · 1 imprimante Epson · 1 TPE Smile » (null si rien n'est prévu). */
 export function resumeEquipements(d: Equipements) {
-  const parts = EQUIPEMENTS.filter((e) => d[e.key] > 0).map(
-    (e) => `${d[e.key]} ${d[e.key] > 1 ? e.pluriel : e.label === "iPad" || e.label === "TPE" ? e.label : e.label.toLowerCase()}`,
-  );
+  const parts = EQUIPEMENTS.filter((e) => d[e.key] > 0).map((e) => `${d[e.key]} ${d[e.key] > 1 ? e.pluriel : e.un}`);
   return parts.length ? parts.join(" · ") : null;
 }

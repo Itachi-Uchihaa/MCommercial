@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { fmtHeure, fmtJourCourt } from "@/lib/agenda";
 import { depuis, joursEntre } from "@/lib/dates";
-import { RAISONS_PERTE, STEPS, derniereEtape, niveau, resumeEquipements, villeDe } from "@/lib/dossiers";
+import { RAISONS_PERTE, STEPS, derniereEtape, enUtilisation, niveau, resumeEquipements, villeDe } from "@/lib/dossiers";
 import type { Dossier, RendezVous } from "@/lib/types";
 import { IconClock } from "../icons";
 
@@ -20,6 +20,7 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
   const derniere = derniereEtape(d);
   const equipements = resumeEquipements(d);
   const meta = [showCommercial && d.commercial, villeDe(d.adresse)].filter(Boolean).join(" · ");
+  const termine = enUtilisation(d);
 
   return (
     <Link
@@ -28,7 +29,7 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
     >
       <span className="block text-[17px] font-bold break-words">{d.restaurant}</span>
       {/* Badges sur la ligne du commercial et de la ville : le nom garde toute la largeur */}
-      {(meta || relance || d.perdu_le) && (
+      {(meta || relance || d.perdu_le || termine) && (
         <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           {meta && <span className="mr-auto text-[13px] text-muted">{meta}</span>}
           {relance && (
@@ -39,12 +40,15 @@ export function DossierCard({ dossier: d, today, prochain, relance, showCommerci
           {d.perdu_le && (
             <span className="flex-none rounded-full bg-[#e6e8ef] px-2.5 py-1 text-[12.5px] font-bold text-ink-soft">Perdu</span>
           )}
+          {termine && (
+            <span className="flex-none rounded-full bg-ok-soft px-2.5 py-1 text-[12.5px] font-bold text-ok-ink">En utilisation</span>
+          )}
         </span>
       )}
 
       <span aria-hidden className="mt-3 grid gap-1" style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}>
         {STEPS.map((s, i) => (
-          <span key={s.key} className={`h-1.5 rounded-full ${i <= n ? (d.perdu_le ? "bg-[#a9afbd]" : "bg-brand") : "bg-line"}`} />
+          <span key={s.key} className={`h-1.5 rounded-full ${i <= n ? (d.perdu_le ? "bg-[#a9afbd]" : termine ? "bg-ok" : "bg-brand") : "bg-line"}`} />
         ))}
       </span>
 

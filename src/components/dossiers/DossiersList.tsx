@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FILTRES_ETAPE, enCours, etapeDe, type FiltreEtape } from "@/lib/dossiers";
+import { FILTRES_ETAPE, FILTRE_PAR_DEFAUT, enCours, etapeDe, type FiltreEtape } from "@/lib/dossiers";
 import type { Dossier, Membre, RendezVous } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
@@ -28,7 +28,7 @@ const normalise = (s: string | null | undefined) => (s ?? "").toLowerCase().repl
 /** Garde les filtres dans l'URL : un lien partagé ou un rechargement retombe dessus. */
 function syncUrl({ etape, commercial, q }: Filtres) {
   const p = new URLSearchParams();
-  if (etape !== "tous") p.set("etape", etape);
+  if (etape !== FILTRE_PAR_DEFAUT) p.set("etape", etape);
   if (commercial) p.set("commercial", commercial);
   if (q.trim()) p.set("q", q.trim());
   window.history.replaceState(null, "", `/dossiers${p.size ? `?${p}` : ""}`);
@@ -82,7 +82,7 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
 
   const aRelancer = scope.filter((d) => relances[d.id]).length;
   const nbEnCours = compte.en_cours;
-  const filtre = filtres.etape !== "tous" || filtres.q.trim() !== "";
+  const filtre = filtres.etape !== FILTRE_PAR_DEFAUT || filtres.q.trim() !== "";
 
   return (
     <AppShell
@@ -183,12 +183,14 @@ export function DossiersList({ me, canAdmin, equipe, today, dossiers, prochains,
           ) : filtre ? (
             <>
               <p>Aucun dossier ne correspond à ces filtres.</p>
-              <button onClick={() => set({ etape: "tous", q: "" })} className="mt-2 min-h-11 font-semibold text-brand">
+              <button onClick={() => set({ etape: FILTRE_PAR_DEFAUT, q: "" })} className="mt-2 min-h-11 font-semibold text-brand">
                 Effacer les filtres
               </button>
             </>
           ) : (
-            <p>Aucun dossier en cours. Les dossiers perdus sont dans «&nbsp;Perdus&nbsp;».</p>
+            <p>
+              Aucun dossier en cours. Les dossiers terminés sont dans «&nbsp;En utilisation&nbsp;», les perdus dans «&nbsp;Perdus&nbsp;».
+            </p>
           )}
         </div>
       )}

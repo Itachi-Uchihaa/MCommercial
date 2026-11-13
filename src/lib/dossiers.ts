@@ -59,7 +59,10 @@ export function jourEtape(d: Dossier, key: StepKey): string | null {
   return ts ? parisDay(ts) : null;
 }
 
-/** En cours : ni perdu, ni terminé (accompagnement fait, dernière étape du parcours). */
+/** En utilisation : toutes les étapes sont faites (accompagnement fait), le client se sert de la caisse. */
+export const enUtilisation = (d: Dossier) => !d.perdu_le && isDone(d, "accompagnement");
+
+/** En cours : ni perdu, ni en utilisation. */
 export const enCours = (d: Dossier) => !d.perdu_le && !isDone(d, "accompagnement");
 
 /** Index de l'étape cochée la plus avancée (-1 : aucune). */
@@ -80,11 +83,15 @@ export function etapeDe(d: Dossier): Etape {
   return n < 0 ? "prospect" : STEPS[n].key;
 }
 
-/** Filtre de la liste : une étape, tous (sauf perdus) ou en cours (ni perdus ni terminés). */
+/**
+ * Filtre de la liste : une étape, tous (sauf perdus) ou en cours (ni perdus ni en utilisation).
+ * « En cours » est le filtre par défaut : les dossiers terminés ne traînent pas dans la liste.
+ */
 export type FiltreEtape = Etape | "tous" | "en_cours";
 
+export const FILTRE_PAR_DEFAUT: FiltreEtape = "en_cours";
+
 export const FILTRES_ETAPE: { key: FiltreEtape; label: string }[] = [
-  { key: "tous", label: "Tous" },
   { key: "en_cours", label: "En cours" },
   { key: "prospect", label: "Prospects" },
   { key: "rdv", label: "RDV faits" },
@@ -93,8 +100,10 @@ export const FILTRES_ETAPE: { key: FiltreEtape; label: string }[] = [
   { key: "groupe_sav", label: "SAV" },
   { key: "enrolement_tpe", label: "TPE" },
   { key: "installation", label: "Installés" },
-  { key: "accompagnement", label: "Accompagnés" },
+  // Accompagnement fait : dernière étape, le dossier est terminé
+  { key: "accompagnement", label: "En utilisation" },
   { key: "perdu", label: "Perdus" },
+  { key: "tous", label: "Tous" },
 ];
 
 /** Prochaine étape à franchir : celle qui suit l'étape la plus avancée (null : tout est fait). */

@@ -56,6 +56,9 @@ export type Dossier = {
   devis_tpe_mpay: number;
   devis_tpe_borne: number;
   devis_borne: number;
+  devis_qr_menu: number;
+  devis_qr_borne: number;
+  devis_qr_commande: number;
   perdu_le: string | null;
   raison_perte: RaisonPerte | null;
   /** Jour où le commercial veut être rappelé de relancer le client. */
@@ -147,6 +150,9 @@ export type Equipements = Pick<
   | "devis_tpe_mpay"
   | "devis_tpe_borne"
   | "devis_borne"
+  | "devis_qr_menu"
+  | "devis_qr_borne"
+  | "devis_qr_commande"
 >;
 
 /** Étapes affichées sur chaque carte, dans l'ordre du parcours commercial. */

@@ -196,6 +196,9 @@ export const EQUIPEMENTS: { key: keyof Equipements; label: string; un: string; p
   { key: "devis_tpe_mpay", label: "TPE MPay", un: "TPE MPay", pluriel: "TPE MPay" },
   { key: "devis_tpe_borne", label: "TPE borne", un: "TPE borne", pluriel: "TPE borne" },
   { key: "devis_borne", label: "Borne", un: "borne", pluriel: "bornes" },
+  { key: "devis_qr_menu", label: "QR code menu", un: "QR code menu", pluriel: "QR codes menu" },
+  { key: "devis_qr_borne", label: "QR borne", un: "QR borne", pluriel: "QR borne" },
+  { key: "devis_qr_commande", label: "QR prise de commande", un: "QR prise de commande", pluriel: "QR prise de commande" },
 ];
 
 /** « 2 iPad · 1 imprimante Epson · 1 TPE Smile » (null si rien n'est prévu). */

@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { after } from "next/server";
-import { addDays, fmtJour, isIsoDate, todayParis } from "@/lib/agenda";
+import { addDays, fmtHeureLongue, fmtJour, isIsoDate, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
 import { acteur } from "@/lib/acteur";
 import { DATE_PREVUE, EQUIPEMENTS, ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
@@ -92,17 +92,22 @@ export async function modifierDossier(id: string, input: DossierInfos): Promise<
 }
 
 /**
- * Fixe (ou retire, avec null) la date d'installation ou d'accompagnement.
+ * Fixe (ou retire, avec null) la date d'installation ou d'accompagnement,
+ * et pour l'installation une heure facultative (HH:MM, heure de Paris).
  * L'étape est faite le jour venu ; la base l'écrit dans le journal.
  */
-export async function fixerDate(id: string, key: EtapeDatee, jour: string | null): Promise<Result> {
+export async function fixerDate(id: string, key: EtapeDatee, jour: string | null, heure: string | null = null): Promise<Result> {
   return run("La date n’a pas pu être enregistrée.", async () => {
     if (!(key in DATE_PREVUE)) throw new Refus("Étape inconnue. Recharge la page et réessaie.");
     if (jour !== null && !isIsoDate(jour)) throw new Refus("Cette date n’est pas valide.");
+    if (heure !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(heure)) throw new Refus("Cette heure n’est pas valide.");
+    // L'heure n'existe que pour l'installation, et disparaît avec la date
+    const avecHeure = key === "installation";
+    const h = avecHeure && jour ? heure : null;
     const supabase = await createClient();
     const { data: d, error } = await supabase
       .from("dossiers")
-      .update({ [DATE_PREVUE[key]]: jour })
+      .update(avecHeure ? { date_installation: jour, heure_installation: h } : { [DATE_PREVUE[key]]: jour })
       .eq("id", id)
       .select("restaurant, commercial")
       .single();
@@ -116,7 +121,7 @@ export async function fixerDate(id: string, key: EtapeDatee, jour: string | null
           key,
           {
             title: `${nom} : ${d.restaurant}`,
-            body: `${jour > todayParis() ? prevu : fait} le ${fmtJour(jour)}. Dossier de ${d.commercial}${d.commercial !== a.nom ? `, daté par ${a.nom}` : ""}.`,
+            body: `${jour > todayParis() ? prevu : fait} le ${fmtJour(jour)}${h ? ` à ${fmtHeureLongue(h)}` : ""}. Dossier de ${d.commercial}${d.commercial !== a.nom ? `, daté par ${a.nom}` : ""}.`,
             url: `/dossiers/${id}`,
             tag: `etape-${id}-${key}`,
           },

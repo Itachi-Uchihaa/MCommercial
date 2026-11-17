@@ -42,6 +42,8 @@ export type Dossier = {
   enrolement_tpe_le: string | null;
   /** Jour d'installation (AAAA-MM-JJ), choisi par le commercial : à venir = prévue. */
   date_installation: string | null;
+  /** Heure d'installation (HH:MM:SS, heure de Paris sans fuseau), facultative. */
+  heure_installation: string | null;
   /** Jour d'accompagnement (AAAA-MM-JJ), choisi par le commercial : à venir = prévu. */
   date_accompagnement: string | null;
   /** Jour du premier RDV du dossier (tenu à jour par la base). */

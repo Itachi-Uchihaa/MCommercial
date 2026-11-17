@@ -221,6 +221,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 if (estDatee(s.key)) {
                   const choisie = d[DATE_PREVUE[s.key]];
                   const prevue = datePrevue(d, s.key);
+                  const heure = s.key === "installation" ? d.heure_installation : null;
                   return (
                     <Etape
                       key={s.key}
@@ -232,7 +233,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                         fait && jour
                           ? fmtJourCourt(jour)
                           : prevue
-                            ? `${s.key === "installation" ? "Prévue" : "Prévu"} le ${fmtJourCourt(prevue)}`
+                            ? `${s.key === "installation" ? "Prévue" : "Prévu"} le ${fmtJourCourt(prevue)}${heure ? ` à ${fmtHeure(heure)}` : ""}`
                             : undefined
                       }
                       extra={
@@ -242,6 +243,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                             dossierId={d.id}
                             etape={s.key}
                             valeur={choisie}
+                            heure={heure}
                             onMessage={showToast}
                             onErreur={showError}
                           />

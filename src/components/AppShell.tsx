@@ -6,7 +6,7 @@ import type { Membre } from "@/lib/types";
 import { useDossiersEnCours } from "@/lib/useDossiersEnCours";
 import { IconChevronLeft, IconPlus } from "./icons";
 import { McaisseLogo, McaisseMark } from "./McaisseLogo";
-import { NAV, PRESENCES, TabBar, libelleBadge, type Badges, type Page } from "./navigation";
+import { AUTRES_PAGES, NAV, TabBar, libelleBadge, type Badges, type Page } from "./navigation";
 import { SignOutButton } from "./SignOutButton";
 
 export type { Page };
@@ -38,7 +38,7 @@ export function AppShell({ me, canAdmin, live, page, title, subtitle, action, ba
           <McaisseLogo suffix="Suivi" />
         </Link>
         <nav aria-label="Navigation principale" className="flex flex-col gap-1">
-          {[...NAV, PRESENCES].map(({ key, href, label, Icon }) => {
+          {[...NAV, ...AUTRES_PAGES].map(({ key, href, label, Icon }) => {
             const n = badges[key];
             return (
               <Link
@@ -195,10 +195,12 @@ function AccountMenu({ me, canAdmin, live }: { me: Membre; canAdmin: boolean; li
               {live ? "En direct" : "Connexion…"}
             </span>
           </div>
-          <Link href={PRESENCES.href} className="flex min-h-12 items-center gap-2.5 border-b border-line px-3.5 text-[15px]">
-            <PRESENCES.Icon className="size-5 text-brand" />
-            {PRESENCES.label}
-          </Link>
+          {AUTRES_PAGES.map(({ key, href, label, Icon }) => (
+            <Link key={key} href={href} className="flex min-h-12 items-center gap-2.5 border-b border-line px-3.5 text-[15px]">
+              <Icon className="size-5 text-brand" />
+              {label}
+            </Link>
+          ))}
           <Link href="/parametres" className="flex min-h-12 items-center border-b border-line px-3.5 text-[15px]">
             Paramètres
           </Link>

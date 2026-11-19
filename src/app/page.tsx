@@ -61,6 +61,12 @@ async function Contenu() {
   const cibles = objectifs.filter((o) => !estCommercial || o.commercial === me.nom);
   const telephones = new Map(dossiers.map((d) => [d.id, d.telephone]));
   const prochain = estCommercial ? rdvs.find((r) => !rdvPasse(r, today, nowTime)) : undefined;
+  // Installations programmées (les siennes pour un commercial), la plus proche d'abord
+  const installations = dossiers
+    .filter((d) => d.date_installation && d.date_installation >= today)
+    .sort((a, b) =>
+      `${a.date_installation} ${a.heure_installation ?? "99"}`.localeCompare(`${b.date_installation} ${b.heure_installation ?? "99"}`),
+    );
 
   return (
     <Aujourdhui
@@ -74,6 +80,12 @@ async function Contenu() {
       duJour={rdvs.filter((r) => r.jour === today)}
       passes={rdvs.filter((r) => r.jour === today && rdvPasse(r, today, nowTime)).map((r) => r.id)}
       relances={relancesDe({ dossiers, rdvs, today, nowTime })}
+      installations={{
+        nombre: installations.length,
+        prochaine: installations[0]
+          ? { id: installations[0].id, restaurant: installations[0].restaurant, jour: installations[0].date_installation!, heure: installations[0].heure_installation }
+          : null,
+      }}
     />
   );
 }

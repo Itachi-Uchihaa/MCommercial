@@ -55,7 +55,7 @@ type Props = {
 };
 
 const ACTION_ETAPE: Record<EtapeManuelle, string> = {
-  devis_fait: "Marquer le devis envoyé",
+  devis_fait: "Devis envoyé",
   signature: "Marquer le dossier signé",
   groupe_sav: "Marquer le groupe SAV créé",
   enrolement_tpe: "Marquer le TPE enrôlé",
@@ -252,16 +252,20 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     />
                   );
                 }
+                // « Devis » : la case se coche avec le bouton « Devis envoyé » du bas
+                const titreEtape = s.key === "devis_fait" ? "Devis" : s.long;
                 return (
                   <Etape
                     key={s.key}
                     fait={fait}
                     courante={courante}
                     dernier={i === STEPS.length - 1}
-                    titre={courante ? `${s.long} · étape en cours` : s.long}
+                    titre={courante ? `${titreEtape} · étape en cours` : titreEtape}
                     detail={
                       fait && jour
-                        ? fmtJourCourt(jour)
+                        ? s.key === "devis_fait"
+                          ? `Envoyé le ${fmtJourCourt(jour)}`
+                          : fmtJourCourt(jour)
                         : courante && futurs[0]
                           ? `RDV prévu ${fmtJourCourt(futurs[0].jour)} à ${fmtHeure(futurs[0].debut)}`
                           : undefined

@@ -39,6 +39,14 @@ async function Contenu({ params }: Pick<PageProps<"/dossiers/[id]">, "params">) 
     : { data: [] };
   const menu = fichiers.map((f) => ({ ...f, url: liens?.find((l) => l.path === f.chemin)?.signedUrl ?? null }));
 
+  // Prix de l'abonnement : la base ne le donne qu'à la direction et aux admins
+  let abonnement: number | null = null;
+  if (canAdmin) {
+    const res = await supabase.from("abonnements").select("prix").eq("dossier_id", id).maybeSingle<{ prix: number | string }>();
+    verifier(res);
+    abonnement = res.data ? Number(res.data.prix) : null;
+  }
+
   return (
     <Fiche
       key={dossier.id}
@@ -51,6 +59,7 @@ async function Contenu({ params }: Pick<PageProps<"/dossiers/[id]">, "params">) 
       rdvs={(rdvs ?? []) as RendezVous[]}
       journal={(journal ?? []) as JournalEntry[]}
       menu={menu}
+      abonnement={abonnement}
     />
   );
 }

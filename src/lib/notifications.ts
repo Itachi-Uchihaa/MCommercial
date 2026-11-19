@@ -9,7 +9,9 @@ export type TypeNotif =
   | "compte_rendu"
   | "devis_fait"
   | "signature"
+  | "paiement"
   | "groupe_sav"
+  | "compte_cree"
   | "enrolement_tpe"
   | "installation"
   | "accompagnement"
@@ -32,7 +34,9 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
       { key: "compte_rendu", label: "Compte rendu de RDV" },
       { key: "devis_fait", label: "Devis envoyé" },
       { key: "signature", label: "Dossier signé" },
+      { key: "paiement", label: "Devis payé (ou en plusieurs fois, en attente)" },
       { key: "groupe_sav", label: "Groupe SAV créé" },
+      { key: "compte_cree", label: "Compte créé" },
       { key: "enrolement_tpe", label: "TPE enrôlé" },
       { key: "installation", label: "Installation datée" },
       { key: "accompagnement", label: "Accompagnement daté" },

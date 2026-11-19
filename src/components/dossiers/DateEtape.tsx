@@ -9,7 +9,7 @@ type Props = {
   etape: EtapeDatee;
   /** Date enregistrée (AAAA-MM-JJ) ou null. */
   valeur: string | null;
-  /** Heure enregistrée (HH:MM:SS) ou null : installation seulement. */
+  /** Heure enregistrée (HH:MM:SS) ou null. */
   heure?: string | null;
   onMessage: (message: string) => void;
   onErreur: (message: string) => void;
@@ -17,21 +17,17 @@ type Props = {
 
 const LIBELLE: Record<EtapeDatee, string> = { installation: "Date d’installation", accompagnement: "Date d’accompagnement" };
 
-/**
- * Date d'une étape datée (installation, accompagnement) : à venir = prévue, faite le jour venu.
- * L'installation a aussi une heure, facultative.
- */
+/** Date d'une étape datée (installation, accompagnement), avec une heure facultative : à venir = prévue, faite le jour venu. */
 export function DateEtape({ dossierId, etape, valeur, heure = null, onMessage, onErreur }: Props) {
-  const avecHeure = etape === "installation";
   const heureEnregistree = heure ? heure.slice(0, 5) : "";
   const [jour, setJour] = useState(valeur ?? "");
   const [h, setH] = useState(heureEnregistree);
   const [pending, start] = useTransition();
-  const modifie = jour !== (valeur ?? "") || (avecHeure && h !== heureEnregistree);
+  const modifie = jour !== (valeur ?? "") || h !== heureEnregistree;
 
   function enregistrer(nouveau: string | null) {
     start(async () => {
-      const res = await fixerDate(dossierId, etape, nouveau, nouveau && avecHeure && h ? h : null);
+      const res = await fixerDate(dossierId, etape, nouveau, nouveau && h ? h : null);
       if (!res.ok) return onErreur(res.error);
       if (nouveau === null) {
         setJour("");
@@ -51,7 +47,7 @@ export function DateEtape({ dossierId, etape, valeur, heure = null, onMessage, o
       <label htmlFor={`${dossierId}-${etape}`} className="text-[14px] font-semibold">
         {LIBELLE[etape]}
       </label>
-      <div className={avecHeure ? "mt-1.5 grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-2" : "mt-1.5"}>
+      <div className="mt-1.5 grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-2">
         <input
           id={`${dossierId}-${etape}`}
           type="date"
@@ -59,15 +55,13 @@ export function DateEtape({ dossierId, etape, valeur, heure = null, onMessage, o
           onChange={(e) => setJour(e.target.value)}
           className="input"
         />
-        {avecHeure && (
-          <input
-            type="time"
-            aria-label="Heure d’installation"
-            value={h}
-            onChange={(e) => setH(e.target.value)}
-            className="input"
-          />
-        )}
+        <input
+          type="time"
+          aria-label={etape === "installation" ? "Heure d’installation" : "Heure d’accompagnement"}
+          value={h}
+          onChange={(e) => setH(e.target.value)}
+          className="input"
+        />
       </div>
       {(modifie || valeur) && (
         <div className="mt-2.5 flex gap-2">

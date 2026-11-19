@@ -5,12 +5,12 @@ import { after } from "next/server";
 import { addDays, fmtHeureLongue, fmtJour, isIsoDate, todayParis } from "@/lib/agenda";
 import { joursEntre } from "@/lib/dates";
 import { acteur } from "@/lib/acteur";
-import { DATE_PREVUE, EQUIPEMENTS, ETAPES_MANUELLES, RAISONS_PERTE, STEPS, jourEtape, peutSupprimer } from "@/lib/dossiers";
-import { getCurrentMembre } from "@/lib/auth";
+import { DATE_PREVUE, EQUIPEMENTS, ETAPES_MANUELLES, PAIEMENTS, RAISONS_PERTE, STEPS, estPaiement, jourEtape, peutSupprimer } from "@/lib/dossiers";
+import { getCurrentMembre, peutAdministrer } from "@/lib/auth";
 import { notifierEquipe } from "@/lib/push";
 import { DEVIS_SANS_REPONSE_JOURS } from "@/lib/relances";
 import { createClient } from "@/lib/supabase/server";
-import type { Dossier, DossierInfos, EtapeDatee, EtapeManuelle, Equipements, RaisonPerte, Source } from "@/lib/types";
+import type { Dossier, DossierInfos, EtapeDatee, EtapeManuelle, Equipements, Paiement, RaisonPerte, Source } from "@/lib/types";
 
 export type Result = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -93,7 +93,7 @@ export async function modifierDossier(id: string, input: DossierInfos): Promise<
 
 /**
  * Fixe (ou retire, avec null) la date d'installation ou d'accompagnement,
- * et pour l'installation une heure facultative (HH:MM, heure de Paris).
+ * avec une heure facultative (HH:MM, heure de Paris).
  * L'étape est faite le jour venu ; la base l'écrit dans le journal.
  */
 export async function fixerDate(id: string, key: EtapeDatee, jour: string | null, heure: string | null = null): Promise<Result> {
@@ -101,13 +101,14 @@ export async function fixerDate(id: string, key: EtapeDatee, jour: string | null
     if (!(key in DATE_PREVUE)) throw new Refus("Étape inconnue. Recharge la page et réessaie.");
     if (jour !== null && !isIsoDate(jour)) throw new Refus("Cette date n’est pas valide.");
     if (heure !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(heure)) throw new Refus("Cette heure n’est pas valide.");
-    // L'heure n'existe que pour l'installation, et disparaît avec la date
-    const avecHeure = key === "installation";
-    const h = avecHeure && jour ? heure : null;
+    // L'heure disparaît avec la date
+    const h = jour ? heure : null;
+    const patch =
+      key === "installation" ? { date_installation: jour, heure_installation: h } : { date_accompagnement: jour, heure_accompagnement: h };
     const supabase = await createClient();
     const { data: d, error } = await supabase
       .from("dossiers")
-      .update(avecHeure ? { date_installation: jour, heure_installation: h } : { [DATE_PREVUE[key]]: jour })
+      .update(patch)
       .eq("id", id)
       .select("restaurant, commercial")
       .single();
@@ -129,6 +130,57 @@ export async function fixerDate(id: string, key: EtapeDatee, jour: string | null
         );
       });
     }
+  });
+}
+
+/**
+ * Étape « Devis payé » : payé, en plusieurs fois ou en attente (null : retire le choix).
+ * Les trois font avancer le dossier ; la base date l'étape et l'écrit dans le journal.
+ */
+export async function fixerPaiement(id: string, paiement: Paiement | null): Promise<Result> {
+  return run("Le paiement n’a pas pu être enregistré.", async () => {
+    if (paiement !== null && !estPaiement(paiement)) throw new Refus("Choix inconnu. Recharge la page et réessaie.");
+    const supabase = await createClient();
+    const { data: d, error } = await supabase
+      .from("dossiers")
+      .update({ paiement, relance_le: null })
+      .eq("id", id)
+      .select("restaurant, commercial")
+      .single();
+    if (error) throw error;
+
+    if (paiement) {
+      after(async () => {
+        const a = await acteur(supabase);
+        await notifierEquipe(
+          "paiement",
+          {
+            title: `${PAIEMENTS.find((p) => p.key === paiement)!.detail} : ${d.restaurant}`,
+            body: d.commercial !== a.nom ? `Dossier de ${d.commercial}, mis à jour par ${a.nom}.` : `Dossier de ${a.nom}.`,
+            url: `/dossiers/${id}`,
+            tag: `etape-${id}-paiement`,
+          },
+          { sauf: a.email },
+        );
+      });
+    }
+  });
+}
+
+/** Prix de l'abonnement (euros par mois ; null : l'efface). Direction et admins seulement. */
+export async function enregistrerAbonnement(id: string, prix: number | null): Promise<Result> {
+  return run("Le prix de l’abonnement n’a pas pu être enregistré.", async () => {
+    const { me } = await getCurrentMembre();
+    if (!me || !peutAdministrer(me)) throw new Refus("Réservé à la direction.");
+    if (prix !== null && (!Number.isFinite(prix) || prix < 0 || prix >= 100000)) throw new Refus("Indique un prix valide, en euros.");
+    const supabase = await createClient();
+    const { error } =
+      prix === null
+        ? await supabase.from("abonnements").delete().eq("dossier_id", id)
+        : await supabase
+            .from("abonnements")
+            .upsert({ dossier_id: id, prix: Math.round(prix * 100) / 100, updated_at: new Date().toISOString(), updated_by: me.nom });
+    if (error) throw error;
   });
 }
 

@@ -6,7 +6,7 @@ import { enregistrerObjectifs } from "@/app/actions/objectifs";
 import { MOTIFS, absenceDe, fmtPeriode, periodesContinues } from "@/lib/absences";
 import { RDV_TYPES, addDays, colorOf, fmtHeure, fmtJourCourt, mondayOf } from "@/lib/agenda";
 import { deMois, debutDuMois, parisDay } from "@/lib/dates";
-import { EQUIPEMENTS, RAISONS_PERTE, SOURCES, etapeDe, FILTRES_ETAPE } from "@/lib/dossiers";
+import { EQUIPEMENTS, PAIEMENTS, RAISONS_PERTE, SOURCES, etapeDe, FILTRES_ETAPE } from "@/lib/dossiers";
 import type { Relance } from "@/lib/relances";
 import { PERIODES, type Periode, type StatsEquipe } from "@/lib/stats";
 import type { Absence, Dossier, Membre, RendezVous } from "@/lib/types";
@@ -601,11 +601,15 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ...EQUIPEMENTS.map(({ key, label }): [string, (d: Dossier) => string] => [`Devis : ${label}`, (d) => String(d[key])]),
     ["Devis envoyé le", (d) => jour(d.devis_fait_le)],
     ["Signé le", (d) => jour(d.signature_le)],
+    ["Paiement", (d) => PAIEMENTS.find((p) => p.key === d.paiement)?.detail ?? ""],
+    ["Paiement noté le", (d) => jour(d.paiement_le)],
     ["Groupe SAV créé le", (d) => jour(d.groupe_sav_le)],
+    ["Compte créé le", (d) => jour(d.compte_cree_le)],
     ["TPE enrôlé le", (d) => jour(d.enrolement_tpe_le)],
     ["Installation le", (d) => d.date_installation],
     ["Installation à", (d) => (d.heure_installation ? d.heure_installation.slice(0, 5) : "")],
     ["Accompagnement le", (d) => d.date_accompagnement],
+    ["Accompagnement à", (d) => (d.heure_accompagnement ? d.heure_accompagnement.slice(0, 5) : "")],
     ["Perdu le", (d) => jour(d.perdu_le)],
     ["Raison de la perte", (d) => (d.raison_perte ? RAISONS_PERTE[d.raison_perte] : "")],
     ["Créé le", (d) => jour(d.created_at)],

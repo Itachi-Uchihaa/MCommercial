@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { IconCalendar, IconChart, IconFolder, IconSun, IconUserCheck, IconUsers } from "./icons";
+import { IconCalendar, IconChart, IconFolder, IconSun, IconTool, IconUserCheck, IconUsers } from "./icons";
 
-export type Page = "aujourdhui" | "dossiers" | "clients" | "agenda" | "equipe" | "presences";
+export type Page = "aujourdhui" | "dossiers" | "clients" | "agenda" | "equipe" | "presences" | "installations";
 
 export const NAV: { key: Page; href: string; label: string; Icon: (p: { className?: string }) => React.ReactNode }[] = [
   { key: "aujourdhui", href: "/", label: "Aujourd’hui", Icon: IconSun },
@@ -13,6 +13,10 @@ export const NAV: { key: Page; href: string; label: string; Icon: (p: { classNam
 
 /** Hors des onglets du bas (5 au plus pour rester faciles à toucher) : menu de gauche et menu du compte. */
 export const PRESENCES = { key: "presences" as const, href: "/presences", label: "Présences", Icon: IconUserCheck };
+export const INSTALLATIONS = { key: "installations" as const, href: "/installations", label: "Installations", Icon: IconTool };
+
+/** Entrées du menu du compte (téléphone) et du bas du menu latéral, hors onglets. */
+export const AUTRES_PAGES = [INSTALLATIONS, PRESENCES];
 
 /** Nombre affiché à côté d'un onglet (ex. dossiers en cours). */
 export type Badges = Partial<Record<Page, number | null>>;

@@ -11,7 +11,7 @@ import type { Membre, RendezVous } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { CompteRenduSheet } from "../CompteRenduSheet";
-import { IconCalendar, IconCheck, IconFolder, IconPhone, IconRoute } from "../icons";
+import { IconCalendar, IconCheck, IconChevronRight, IconFolder, IconPhone, IconRoute, IconTool } from "../icons";
 import { Toast, useToast } from "../Toast";
 
 type Props = {
@@ -27,11 +27,13 @@ type Props = {
   /** Ids des RDV du jour déjà terminés. */
   passes: string[];
   relances: Relance[];
+  /** Installations programmées (aujourd'hui et à venir) et la plus proche. */
+  installations: { nombre: number; prochaine: { id: string; restaurant: string; jour: string; heure: string | null } | null };
 };
 
 const maj = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objectif, prochain, duJour, passes, relances }: Props) {
+export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objectif, prochain, duJour, passes, relances, installations }: Props) {
   const live = useRealtimeRefresh(["dossiers", "rendez_vous", "objectifs"]);
   const [cr, setCr] = useState<RendezVous | null>(null);
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -62,6 +64,27 @@ export function Aujourdhui({ me, canAdmin, equipe, today, estCommercial, objecti
       <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2 lg:items-start">
         <div className="space-y-5">
           <Objectif {...objectif} today={today} estCommercial={estCommercial} canAdmin={canAdmin} />
+
+          <Link href="/installations" className="card flex min-h-16 items-center gap-3 px-4 py-3 hover:border-brand/40">
+            <span className="flex size-10 flex-none items-center justify-center rounded-xl bg-brand-soft text-brand">
+              <IconTool />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-bold">
+                {installations.nombre
+                  ? `${installations.nombre} installation${installations.nombre > 1 ? "s" : ""} programmée${installations.nombre > 1 ? "s" : ""}`
+                  : "Installations"}
+              </span>
+              <span className="block truncate text-[13px] text-muted">
+                {installations.prochaine
+                  ? `Prochaine : ${installations.prochaine.restaurant}, ${installations.prochaine.jour === today ? "aujourd’hui" : fmtJourCourt(installations.prochaine.jour)}${
+                      installations.prochaine.heure ? ` à ${fmtHeure(installations.prochaine.heure)}` : ""
+                    }`
+                  : "Aucune installation programmée"}
+              </span>
+            </span>
+            <IconChevronRight className="size-5 text-muted" />
+          </Link>
 
           {prochain && (
             <section aria-labelledby="prochain">

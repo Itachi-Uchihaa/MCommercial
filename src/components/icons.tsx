@@ -47,6 +47,12 @@ export const IconUserCheck = (p: P) => (
     <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 11.5l2 2 4-4" />
   </Svg>
 );
+/** Clé plate : installation du matériel chez le client. */
+export const IconTool = (p: P) => (
+  <Svg {...p}>
+    <path d="M14.7 6.3a4 4 0 0 0 5 5L21 13a6 6 0 0 1-7.6 1.3L7 20.7a2 2 0 0 1-2.8-2.8l6.4-6.4A6 6 0 0 1 11 4l1.7 1.3a4 4 0 0 0 2 1z" />
+  </Svg>
+);
 export const IconChart = (p: P) => (
   <Svg {...p}>
     <path d="M4 20V11M10 20V5M16 20v-6M21 20H3" />

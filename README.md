@@ -17,6 +17,7 @@ Onglets en bas sur téléphone, menu latéral sur ordinateur. Tout se met à jou
 - **Relances automatiques** : devis sans réponse depuis 7 jours, rappel posé dans un compte rendu, RDV sans compte rendu ; côté directeur, dossiers signés qui n'avancent plus depuis 10 jours.
 - **Fiche d'un commercial** (toucher son nom dans Équipe) : ses chiffres (en cours, signés, RDV faits, comptes rendus), ses prochains RDV, toute son activité jour par jour (dossiers créés, étapes, notes, comptes rendus, RDV planifiés) et ses dossiers.
 - **Équipe** (directeur) : signés / objectif, taux de signature, délai moyen, parcours du RDV à l'installation, qui est sur le terrain aujourd'hui, à débloquer, chiffres par commercial, semaine de l'équipe, pourquoi on perd, d'où viennent les signatures, export CSV. Objectifs mensuels fixés par les administrateurs.
+- **Installations** (menu de gauche sur ordinateur, menu du compte sur téléphone, et case sur « Aujourd'hui ») : toutes les installations programmées, jour par jour, avec l'heure, le matériel du devis, l'itinéraire et l'appel ; filtre par commercial (?qui=Nom).
 - **Présences** (menu de gauche sur ordinateur, menu du compte sur téléphone) : qui est là semaine par semaine (« Là », « École », « Congés », « Absent »), absences en cours et à venir. Chacun ajoute ses absences (un jour, une période, ou répétées chaque semaine / une semaine sur deux pour les alternants) ; la direction gère celles de tout le monde. L'écran **Équipe** affiche les absents de la semaine et des quatre suivantes, et les absences dans « Aujourd'hui sur le terrain » et « Semaine de l'équipe ».
 - **Notifications push** (gratuites, sans App Store), activées par chacun dans **Paramètres**, qui choisit aussi ce qui le prévient (`src/lib/notifications.ts`). Un commercial : RDV ajouté ou déplacé pour lui, récap du matin. La direction peut aussi suivre l'activité de l'équipe (nouveau dossier, nouveau RDV, compte rendu, chaque étape, dossier perdu), tout coché par défaut, jamais pour ses propres actions. Sur iPhone, l'app doit d'abord être ajoutée à l'écran d'accueil (iOS 16.4 ou plus).
 - Connexion par email et mot de passe, réservée aux membres de l'équipe ; installable sur l'écran d'accueil (iPhone et Android).
@@ -114,6 +115,7 @@ src/
     clients/              carnet des clients de A à Z (?statut=client|en_cours|perdu&q=)
     agenda/               agenda (?semaine=AAAA-MM-JJ, ?commercial=, ?dossier=<id> pour planifier un RDV)
     equipe/               pilotage de l'équipe (?periode=semaine|mois|trimestre), fiche d'un commercial [nom]
+    installations/        installations programmées, jour par jour (?qui=Nom)
     presences/            qui est là semaine par semaine, absences à venir (?semaine=AAAA-MM-JJ)
     actions/              actions serveur : dossiers, compte rendu, objectifs (puis refresh de la page)
     api/entreprises/      recherche dans l'annuaire officiel des entreprises

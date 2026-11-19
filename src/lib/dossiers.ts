@@ -1,13 +1,15 @@
 import { todayParis } from "@/lib/agenda";
 import { parisDay } from "@/lib/dates";
-import type { Dossier, EtapeDatee, EtapeManuelle, Equipements, RaisonPerte, Source, StepKey } from "@/lib/types";
+import type { Dossier, EtapeDatee, EtapeManuelle, Equipements, Paiement, RaisonPerte, Source, StepKey } from "@/lib/types";
 
 /** Les étapes du parcours, dans l'ordre. « RDV » se coche toute seule, les autres à la main. */
 export const STEPS: { key: StepKey; court: string; long: string }[] = [
   { key: "rdv", court: "RDV", long: "RDV fait" },
   { key: "devis_fait", court: "Devis", long: "Devis envoyé" },
   { key: "signature", court: "Signé", long: "Signé" },
+  { key: "paiement", court: "Payé", long: "Devis payé" },
   { key: "groupe_sav", court: "SAV", long: "Groupe SAV créé" },
+  { key: "compte_cree", court: "Compte", long: "Compte créé" },
   { key: "enrolement_tpe", court: "TPE", long: "TPE enrôlé" },
   { key: "installation", court: "Install.", long: "Installation" },
   { key: "accompagnement", court: "Accomp.", long: "Accompagnement" },
@@ -27,18 +29,28 @@ export function datePrevue(d: Dossier, key: EtapeDatee) {
   return jour && jour > todayParis() ? jour : null;
 }
 
-export const ETAPES_MANUELLES: EtapeManuelle[] = ["devis_fait", "signature", "groupe_sav", "enrolement_tpe"];
+export const ETAPES_MANUELLES: EtapeManuelle[] = ["devis_fait", "signature", "groupe_sav", "compte_cree", "enrolement_tpe"];
+
+/** Choix de l'étape « Devis payé » : chacun fait avancer le dossier, pour ne pas bloquer la suite. */
+export const PAIEMENTS: { key: Paiement; label: string; detail: string }[] = [
+  { key: "paye", label: "Payé", detail: "Payé" },
+  { key: "plusieurs_fois", label: "En plusieurs fois", detail: "Payé en plusieurs fois" },
+  { key: "en_attente", label: "En attente", detail: "Paiement en attente" },
+];
+export const estPaiement = (s: unknown): s is Paiement => PAIEMENTS.some((p) => p.key === s);
 
 const DATE_ETAPE = {
   devis_fait: "devis_fait_le",
   signature: "signature_le",
   groupe_sav: "groupe_sav_le",
+  compte_cree: "compte_cree_le",
   enrolement_tpe: "enrolement_tpe_le",
 } as const;
 
 /** « RDV » : le premier RDV du dossier a eu lieu. Étapes datées : leur jour est arrivé. */
 export function isDone(d: Dossier, key: StepKey) {
   if (key === "rdv") return !!d.rdv_le && d.rdv_le <= todayParis();
+  if (key === "paiement") return d.paiement !== null;
   if (estDatee(key)) {
     const jour = d[DATE_PREVUE[key]];
     return !!jour && jour <= todayParis();
@@ -55,7 +67,7 @@ export function patchEtape(key: EtapeManuelle, fait: boolean): Partial<Dossier> 
 export function jourEtape(d: Dossier, key: StepKey): string | null {
   if (key === "rdv") return isDone(d, "rdv") ? d.rdv_le : null;
   if (estDatee(key)) return isDone(d, key) ? d[DATE_PREVUE[key]] : null;
-  const ts = d[DATE_ETAPE[key]];
+  const ts = key === "paiement" ? d.paiement_le : d[DATE_ETAPE[key]];
   return ts ? parisDay(ts) : null;
 }
 
@@ -97,7 +109,9 @@ export const FILTRES_ETAPE: { key: FiltreEtape; label: string }[] = [
   { key: "rdv", label: "RDV faits" },
   { key: "devis_fait", label: "Devis" },
   { key: "signature", label: "Signés" },
+  { key: "paiement", label: "Payés" },
   { key: "groupe_sav", label: "SAV" },
+  { key: "compte_cree", label: "Comptes créés" },
   { key: "enrolement_tpe", label: "TPE" },
   { key: "installation", label: "Installés" },
   // Accompagnement fait : dernière étape, le dossier est terminé

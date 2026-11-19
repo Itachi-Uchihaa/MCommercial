@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ajouterNote, changerEtape, marquerPerdu, rouvrirDossier, supprimerDossier } from "@/app/actions/dossiers";
+import { ajouterNote, changerEtape, fixerPaiement, marquerPerdu, rouvrirDossier, supprimerDossier } from "@/app/actions/dossiers";
 import { RDV_TYPES, colorOf, fmtHeure, fmtJourCourt, mapsUrl } from "@/lib/agenda";
 import { depuis, fmtMoment, joursEntre, parisDay } from "@/lib/dates";
 import {
   DATE_PREVUE,
   EQUIPEMENTS,
+  PAIEMENTS,
   RAISONS_PERTE,
   SOURCES,
   STEPS,
@@ -27,7 +28,7 @@ import {
   villeDe,
 } from "@/lib/dossiers";
 import { rdvPasse } from "@/lib/relances";
-import type { Dossier, EtapeManuelle, JournalEntry, Membre, RaisonPerte, RendezVous, ResultatRdv } from "@/lib/types";
+import type { Dossier, EtapeManuelle, JournalEntry, Membre, Paiement, RaisonPerte, RendezVous, ResultatRdv } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { AppShell } from "../AppShell";
 import { BottomSheet } from "../BottomSheet";
@@ -35,9 +36,11 @@ import { CompteRenduSheet } from "../CompteRenduSheet";
 import { IconCalendar, IconCheck, IconChevronRight, IconClock, IconMail, IconPhone, IconRoute } from "../icons";
 import { Toast, useToast } from "../Toast";
 import { DossierSheet } from "./DossierSheet";
+import { ChoixPaiement } from "./ChoixPaiement";
 import { DateEtape } from "./DateEtape";
 import { EquipementsDevis } from "./EquipementsDevis";
 import { MenuSav, type FichierMenu } from "./MenuSav";
+import { PrixAbonnement } from "./PrixAbonnement";
 
 type Props = {
   me: Membre;
@@ -52,18 +55,21 @@ type Props = {
   journal: JournalEntry[];
   /** Photos ou PDF du menu (étape « Groupe SAV créé »), avec leur lien signé. */
   menu: FichierMenu[];
+  /** Prix de l'abonnement (€ / mois), chargé pour la direction seulement. */
+  abonnement: number | null;
 };
 
 const ACTION_ETAPE: Record<EtapeManuelle, string> = {
   devis_fait: "Devis envoyé",
   signature: "Marquer le dossier signé",
   groupe_sav: "Marquer le groupe SAV créé",
+  compte_cree: "Marquer le compte créé",
   enrolement_tpe: "Marquer le TPE enrôlé",
 };
 
 const RESULTATS: Record<ResultatRdv, string> = { positif: "positif", a_relancer: "à relancer", pas_interesse: "pas intéressé" };
 
-export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, journal, menu }: Props) {
+export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, journal, menu, abonnement }: Props) {
   const live = useRealtimeRefresh(["dossiers", "rendez_vous", "journal", "menu_fichiers"]);
   const [d, appliquer] = useOptimistic(dossier, (cur: Dossier, patch: Partial<Dossier>) => ({ ...cur, ...patch }));
   const [pending, start] = useTransition();
@@ -103,6 +109,16 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
       appliquer(patchEtape(key, fait));
       const res = await changerEtape(d.id, key, fait);
       if (res.ok) showToast(`Étape « ${nom} » ${fait ? "cochée" : "décochée"}`);
+      else showError(res.error);
+    });
+  }
+
+  /** Étape « Devis payé » : payé, en plusieurs fois, en attente (null : retire le choix). */
+  function paiement(v: Paiement | null) {
+    start(async () => {
+      appliquer({ paiement: v, paiement_le: v ? (d.paiement_le ?? new Date().toISOString()) : null });
+      const res = await fixerPaiement(d.id, v);
+      if (res.ok) showToast(v ? PAIEMENTS.find((p) => p.key === v)!.detail : "Paiement retiré");
       else showError(res.error);
     });
   }
@@ -221,7 +237,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 if (estDatee(s.key)) {
                   const choisie = d[DATE_PREVUE[s.key]];
                   const prevue = datePrevue(d, s.key);
-                  const heure = s.key === "installation" ? d.heure_installation : null;
+                  const heure = s.key === "installation" ? d.heure_installation : d.heure_accompagnement;
                   return (
                     <Etape
                       key={s.key}
@@ -247,6 +263,25 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                             onMessage={showToast}
                             onErreur={showError}
                           />
+                        ) : undefined
+                      }
+                    />
+                  );
+                }
+                // « Devis payé » : trois choix sous l'étape, qui font tous avancer le dossier
+                if (s.key === "paiement") {
+                  const choix = PAIEMENTS.find((p) => p.key === d.paiement);
+                  return (
+                    <Etape
+                      key={s.key}
+                      fait={fait}
+                      courante={courante}
+                      dernier={i === STEPS.length - 1}
+                      titre={courante ? `${s.long} · étape en cours` : s.long}
+                      detail={choix ? `${choix.detail}${jour ? ` · ${fmtJourCourt(jour)}` : ""}` : undefined}
+                      extra={
+                        !d.perdu_le && (fait || courante) ? (
+                          <ChoixPaiement valeur={d.paiement} disabled={pending} onChoix={paiement} />
                         ) : undefined
                       }
                     />
@@ -307,7 +342,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
               </Link>
             )}
             {/* Étapes datées : la date se choisit directement sous l'étape, pas de gros bouton */}
-            {!d.perdu_le && suivante && suivante.key !== "rdv" && !estDatee(suivante.key) && (
+            {!d.perdu_le && suivante && suivante.key !== "rdv" && suivante.key !== "paiement" && !estDatee(suivante.key) && (
               <button
                 onClick={() => etape(suivante.key as EtapeManuelle, true)}
                 disabled={pending}
@@ -324,6 +359,8 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                 Classer perdu…
               </button>
             )}
+            {/* Prix de l'abonnement : direction et admins seulement */}
+            {canAdmin && <PrixAbonnement key={abonnement ?? "aucun"} dossierId={d.id} prix={abonnement} onMessage={showToast} onErreur={showError} />}
           </section>
 
           <section aria-labelledby="rdv" className="card p-4">

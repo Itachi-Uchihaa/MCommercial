@@ -100,6 +100,7 @@ Les évolutions se font par des fichiers datés dans `supabase/`, à exécuter u
 | `2026-11-13_equipements_modeles.sql` | Monnayeur, TPE Smile / MPay / borne et imprimantes Saga / Epson au devis ; anciennes quantités reprises en TPE Smile et imprimantes Epson (`devis_tpe` et `devis_imprimante` ne servent plus) |
 | `2026-11-16_equipements_qr.sql` | QR code menu, QR borne et QR prise de commande au devis, et leur ligne dans l'historique |
 | `2026-11-17_heure_installation.sql` | Heure d'installation (`heure_installation`, facultative) en plus du jour, et dans la ligne de l'historique |
+| `2026-11-19_paiement_compte_abonnement.sql` | Heure d'accompagnement ; étapes « Devis payé » (payé, en plusieurs fois, en attente) et « Compte créé » ; table `abonnements` (prix de l'abonnement, lisible seulement par la direction et les admins) |
 
 Les heures des RDV sont enregistrées sans fuseau (`time`) : ce sont des heures de Paris, saisies et affichées telles quelles.
 

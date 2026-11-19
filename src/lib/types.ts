@@ -13,6 +13,9 @@ export type Membre = {
 export type RaisonPerte = "prix" | "deja_equipe" | "pas_le_moment" | "pas_interesse" | "autre";
 export type Source = "terrain" | "recommandation" | "appel_entrant" | "salon" | "site_web" | "autre";
 
+/** Paiement du devis : payé, en plusieurs fois ou en attente (les trois font avancer le dossier). */
+export type Paiement = "paye" | "plusieurs_fois" | "en_attente";
+
 export type Dossier = {
   id: string;
   commercial: string;
@@ -46,6 +49,14 @@ export type Dossier = {
   heure_installation: string | null;
   /** Jour d'accompagnement (AAAA-MM-JJ), choisi par le commercial : à venir = prévu. */
   date_accompagnement: string | null;
+  /** Heure d'accompagnement (HH:MM:SS, heure de Paris sans fuseau), facultative. */
+  heure_accompagnement: string | null;
+  /** Étape « Devis payé » (null : pas encore renseignée) et sa date, posée par la base. */
+  paiement: Paiement | null;
+  paiement_le: string | null;
+  /** Étape « Compte créé » et sa date, posée par la base. */
+  compte_cree: boolean;
+  compte_cree_le: string | null;
   /** Jour du premier RDV du dossier (tenu à jour par la base). */
   rdv_le: string | null;
   /** Équipements du devis : quantités (0 à 99). */
@@ -162,7 +173,9 @@ export type StepKey =
   | "rdv"
   | "devis_fait"
   | "signature"
+  | "paiement"
   | "groupe_sav"
+  | "compte_cree"
   | "enrolement_tpe"
   | "installation"
   | "accompagnement";
@@ -171,7 +184,7 @@ export type StepKey =
 export type EtapeDatee = "installation" | "accompagnement";
 
 /** Étapes cochées à la main (« RDV » se coche toute seule, les étapes datées se font le jour venu). */
-export type EtapeManuelle = Exclude<StepKey, "rdv" | EtapeDatee>;
+export type EtapeManuelle = Exclude<StepKey, "rdv" | EtapeDatee | "paiement">;
 
 /** Photo ou PDF du menu d'un restaurant (étape « Groupe SAV créé »). */
 export type MenuFichier = {

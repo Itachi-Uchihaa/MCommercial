@@ -31,7 +31,9 @@
   body {
     background: var(--color-canvas);
     color: var(--color-ink);
-    overflow-x: hidden;
+    /* « clip » et non « hidden » : hidden fait du body un conteneur de défilement,
+       et le menu latéral (sticky) défilait alors avec la page sur ordinateur */
+    overflow-x: clip;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }

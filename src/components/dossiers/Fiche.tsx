@@ -60,6 +60,7 @@ type Props = {
 };
 
 const ACTION_ETAPE: Record<EtapeManuelle, string> = {
+  devis_prepare: "Devis fait",
   devis_fait: "Devis envoyé",
   signature: "Marquer le dossier signé",
   groupe_sav: "Marquer le groupe SAV créé",
@@ -287,20 +288,16 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     />
                   );
                 }
-                // « Devis » : la case se coche avec le bouton « Devis envoyé » du bas
-                const titreEtape = s.key === "devis_fait" ? "Devis" : s.long;
                 return (
                   <Etape
                     key={s.key}
                     fait={fait}
                     courante={courante}
                     dernier={i === STEPS.length - 1}
-                    titre={courante ? `${titreEtape} · étape en cours` : titreEtape}
+                    titre={courante ? `${s.long} · étape en cours` : s.long}
                     detail={
                       fait && jour
-                        ? s.key === "devis_fait"
-                          ? `Envoyé le ${fmtJourCourt(jour)}`
-                          : fmtJourCourt(jour)
+                        ? fmtJourCourt(jour)
                         : courante && futurs[0]
                           ? `RDV prévu ${fmtJourCourt(futurs[0].jour)} à ${fmtHeure(futurs[0].debut)}`
                           : undefined
@@ -309,7 +306,7 @@ export function Fiche({ me, canAdmin, equipe, today, nowTime, dossier, rdvs, jou
                     disabled={pending}
                     extra={
                       // Équipements du devis : toujours proposés (quantités à 0 par défaut)
-                      s.key === "devis_fait" ? (
+                      s.key === "devis_prepare" ? (
                         <EquipementsDevis
                           key={EQUIPEMENTS.map((e) => d[e.key]).join("-")}
                           dossierId={d.id}

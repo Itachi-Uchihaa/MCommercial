@@ -7,6 +7,7 @@ export type TypeNotif =
   | "nouveau_dossier"
   | "rdv_equipe"
   | "compte_rendu"
+  | "devis_prepare"
   | "devis_fait"
   | "signature"
   | "paiement"
@@ -32,6 +33,7 @@ export const GROUPES_NOTIF: { titre: string; detail?: string; types: { key: Type
       { key: "nouveau_dossier", label: "Nouveau dossier" },
       { key: "rdv_equipe", label: "Nouveau RDV planifié" },
       { key: "compte_rendu", label: "Compte rendu de RDV" },
+      { key: "devis_prepare", label: "Devis préparé" },
       { key: "devis_fait", label: "Devis envoyé" },
       { key: "signature", label: "Dossier signé" },
       { key: "paiement", label: "Devis payé (ou en plusieurs fois, en attente)" },

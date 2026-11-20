@@ -28,6 +28,10 @@ export type Dossier = {
   /** Activité déclarée à l'annuaire des entreprises (ex. « Restauration traditionnelle »). */
   activite: string | null;
   source: Source | null;
+  /** Étape « Devis » : devis préparé (matériel choisi), avant « Devis envoyé ». */
+  devis_prepare: boolean;
+  devis_prepare_le: string | null;
+  /** Étape « Devis envoyé ». */
   devis_fait: boolean;
   /** Ancienne étape « Devis accepté », plus affichée. */
   devis_accepte: boolean;
@@ -171,6 +175,7 @@ export type Equipements = Pick<
 /** Étapes affichées sur chaque carte, dans l'ordre du parcours commercial. */
 export type StepKey =
   | "rdv"
+  | "devis_prepare"
   | "devis_fait"
   | "signature"
   | "paiement"

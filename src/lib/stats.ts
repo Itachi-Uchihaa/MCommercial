@@ -122,6 +122,7 @@ export type StatsEquipe = ReturnType<typeof statsEquipe>;
 
 const ENTONNOIR: Record<StepKey, string> = {
   rdv: "Premier RDV",
+  devis_prepare: "Devis préparés",
   devis_fait: "Devis envoyés",
   signature: "Signés",
   paiement: "Payés",

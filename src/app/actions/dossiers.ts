@@ -228,7 +228,7 @@ export async function changerEtape(id: string, key: EtapeManuelle, fait: boolean
     const supabase = await createClient();
     const patch: Partial<Dossier> = { [key]: fait };
     // Signé ou plus loin : plus rien à relancer
-    if (fait && key !== "devis_fait") patch.relance_le = null;
+    if (fait && key !== "devis_prepare" && key !== "devis_fait") patch.relance_le = null;
     const { data: d, error } = await supabase.from("dossiers").update(patch).eq("id", id).select("restaurant, commercial").single();
     if (error) throw error;
 

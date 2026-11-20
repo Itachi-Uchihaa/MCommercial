@@ -599,6 +599,7 @@ function exporterCsv(dossiers: Dossier[], today: string) {
     ["Source", (d) => (d.source ? SOURCES[d.source] : "")],
     ["Premier RDV le", (d) => d.rdv_le],
     ...EQUIPEMENTS.map(({ key, label }): [string, (d: Dossier) => string] => [`Devis : ${label}`, (d) => String(d[key])]),
+    ["Devis préparé le", (d) => jour(d.devis_prepare_le)],
     ["Devis envoyé le", (d) => jour(d.devis_fait_le)],
     ["Signé le", (d) => jour(d.signature_le)],
     ["Paiement", (d) => PAIEMENTS.find((p) => p.key === d.paiement)?.detail ?? ""],
